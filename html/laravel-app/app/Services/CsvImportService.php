@@ -1,0 +1,247 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\ClassModel;
+use App\Models\Student;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class CsvImportService
+{
+    /**
+     * CSVファイルをパースして配列に変換
+     */
+    public function parseCSV($filePath): array
+    {
+        $data = [];
+        
+        if (($handle = fopen($filePath, 'r')) !== false) {
+            // ヘッダー行を取得
+            $header = fgetcsv($handle);
+            
+            // データ行を取得
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($header) === count($row)) {
+                    $data[] = array_combine($header, $row);
+                }
+            }
+            
+            fclose($handle);
+        }
+        
+        return $data;
+    }
+
+    /**
+     * クラスデータをインポート
+     */
+    public function importClasses(array $data): array
+    {
+        $errors = [];
+        $success = 0;
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($data as $index => $row) {
+                $validator = Validator::make($row, [
+                    'class_id' => 'required|string',
+                    'class_name' => 'required|string|max:255',
+                    'teacher_name' => 'required|string|max:255',
+                    'teacher_email' => 'required|email|max:255',
+                    'year_id' => 'required|integer|min:2000|max:2100',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'row' => $index + 2, // ヘッダー行を考慮
+                        'data' => $row,
+                        'errors' => $validator->errors()->all(),
+                    ];
+                    continue;
+                }
+                
+                // 既存チェック（更新または新規作成）
+                ClassModel::updateOrCreate(
+                    ['class_id' => $row['class_id']],
+                    [
+                        'class_name' => $row['class_name'],
+                        'teacher_name' => $row['teacher_name'],
+                        'teacher_email' => $row['teacher_email'],
+                        'year_id' => $row['year_id'],
+                    ]
+                );
+                
+                $success++;
+            }
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+        return [
+            'success' => $success,
+            'errors' => $errors,
+            'total' => count($data),
+        ];
+    }
+
+    /**
+     * 生徒データをインポート
+     */
+    public function importStudents(array $data): array
+    {
+        $errors = [];
+        $success = 0;
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($data as $index => $row) {
+                $validator = Validator::make($row, [
+                    'seito_id' => 'required|string',
+                    'seito_name' => 'required|string|max:255',
+                    'seito_number' => 'required|integer|min:1',
+                    'class_id' => 'required|string',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => $validator->errors()->all(),
+                    ];
+                    continue;
+                }
+                
+                // クラスIDから実際のIDを取得
+                $class = ClassModel::where('class_id', $row['class_id'])->first();
+                
+                if (!$class) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => ["クラスID '{$row['class_id']}' が見つかりません"],
+                    ];
+                    continue;
+                }
+                
+                // 既存チェック（更新または新規作成）
+                Student::updateOrCreate(
+                    ['seito_id' => $row['seito_id']],
+                    [
+                        'seito_name' => $row['seito_name'],
+                        'seito_number' => $row['seito_number'],
+                        'class_id' => $class->id,
+                    ]
+                );
+                
+                $success++;
+            }
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+        return [
+            'success' => $success,
+            'errors' => $errors,
+            'total' => count($data),
+        ];
+    }
+
+    /**
+     * 教員データ（クラス担任）をインポート
+     */
+    public function importTeachers(array $data): array
+    {
+        $errors = [];
+        $success = 0;
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($data as $index => $row) {
+                $validator = Validator::make($row, [
+                    'class_id' => 'required|string',
+                    'teacher_name' => 'required|string|max:255',
+                    'teacher_email' => 'required|email|max:255',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => $validator->errors()->all(),
+                    ];
+                    continue;
+                }
+                
+                // クラスを検索して更新
+                $class = ClassModel::where('class_id', $row['class_id'])->first();
+                
+                if (!$class) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => ["クラスID '{$row['class_id']}' が見つかりません"],
+                    ];
+                    continue;
+                }
+                
+                $class->update([
+                    'teacher_name' => $row['teacher_name'],
+                    'teacher_email' => $row['teacher_email'],
+                ]);
+                
+                $success++;
+            }
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+        return [
+            'success' => $success,
+            'errors' => $errors,
+            'total' => count($data),
+        ];
+    }
+
+    /**
+     * CSVファイルのバリデーション
+     */
+    public function validateCSVFile($file): bool
+    {
+        // ファイルサイズチェック（2MB以下）
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            return false;
+        }
+        
+        // MIMEタイプチェック
+        $mimeType = $file->getMimeType();
+        $allowedMimes = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'];
+        
+        if (!in_array($mimeType, $allowedMimes)) {
+            return false;
+        }
+        
+        // 拡張子チェック
+        $extension = $file->getClientOriginalExtension();
+        if ($extension !== 'csv') {
+            return false;
+        }
+        
+        return true;
+    }
+}

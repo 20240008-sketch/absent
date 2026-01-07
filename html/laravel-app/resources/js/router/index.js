@@ -1,0 +1,213 @@
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+
+// レイアウト
+import GuestLayout from '../layouts/GuestLayout.vue';
+import AdminLayout from '../layouts/AdminLayout.vue';
+import ParentLayout from '../layouts/ParentLayout.vue';
+
+// 認証画面
+import AdminLogin from '../pages/auth/AdminLogin.vue';
+import ParentLogin from '../pages/auth/ParentLogin.vue';
+import TwoFactorVerify from '../pages/auth/TwoFactorVerify.vue';
+
+// 管理者画面
+import AdminDashboard from '../pages/admin/Dashboard.vue';
+import ClassList from '../pages/admin/classes/List.vue';
+import ClassForm from '../pages/admin/classes/Form.vue';
+import StudentList from '../pages/admin/students/List.vue';
+import StudentForm from '../pages/admin/students/Form.vue';
+import ParentList from '../pages/admin/parents/List.vue';
+import ParentForm from '../pages/admin/parents/Form.vue';
+import CsvImport from '../pages/admin/CsvImport.vue';
+
+// 保護者画面
+import ParentDashboard from '../pages/parent/Dashboard.vue';
+import AbsenceList from '../pages/parent/absences/List.vue';
+import AbsenceForm from '../pages/parent/absences/Form.vue';
+import PasswordChange from '../pages/parent/PasswordChange.vue';
+
+const routes = [
+  {
+    path: '/',
+    redirect: '/admin/login'
+  },
+  // 管理者認証
+  {
+    path: '/admin/login',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'admin.login',
+        component: AdminLogin,
+        meta: { guest: true }
+      }
+    ]
+  },
+  {
+    path: '/admin/verify-2fa',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'admin.verify2fa',
+        component: TwoFactorVerify,
+        meta: { guest: true, guard: 'admin' }
+      }
+    ]
+  },
+  // 管理者画面
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAuth: true, guard: 'admin' },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'admin.dashboard',
+        component: AdminDashboard
+      },
+      {
+        path: 'classes',
+        name: 'admin.classes',
+        component: ClassList
+      },
+      {
+        path: 'classes/create',
+        name: 'admin.classes.create',
+        component: ClassForm
+      },
+      {
+        path: 'classes/:id/edit',
+        name: 'admin.classes.edit',
+        component: ClassForm
+      },
+      {
+        path: 'students',
+        name: 'admin.students',
+        component: StudentList
+      },
+      {
+        path: 'students/create',
+        name: 'admin.students.create',
+        component: StudentForm
+      },
+      {
+        path: 'students/:id/edit',
+        name: 'admin.students.edit',
+        component: StudentForm
+      },
+      {
+        path: 'parents',
+        name: 'admin.parents',
+        component: ParentList
+      },
+      {
+        path: 'parents/create',
+        name: 'admin.parents.create',
+        component: ParentForm
+      },
+      {
+        path: 'parents/:id/edit',
+        name: 'admin.parents.edit',
+        component: ParentForm
+      },
+      {
+        path: 'import',
+        name: 'admin.import',
+        component: CsvImport
+      }
+    ]
+  },
+  // 保護者認証
+  {
+    path: '/parent/login',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'parent.login',
+        component: ParentLogin,
+        meta: { guest: true }
+      }
+    ]
+  },
+  {
+    path: '/parent/verify-2fa',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'parent.verify2fa',
+        component: TwoFactorVerify,
+        meta: { guest: true, guard: 'parent' }
+      }
+    ]
+  },
+  // 保護者画面
+  {
+    path: '/parent',
+    component: ParentLayout,
+    meta: { requiresAuth: true, guard: 'parent' },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'parent.dashboard',
+        component: ParentDashboard
+      },
+      {
+        path: 'absences',
+        name: 'parent.absences',
+        component: AbsenceList
+      },
+      {
+        path: 'absences/create',
+        name: 'parent.absences.create',
+        component: AbsenceForm
+      },
+      {
+        path: 'absences/:id/edit',
+        name: 'parent.absences.edit',
+        component: AbsenceForm
+      },
+      {
+        path: 'change-password',
+        name: 'parent.changePassword',
+        component: PasswordChange
+      }
+    ]
+  }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+// ナビゲーションガード
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  
+  // 認証が必要なルート
+  if (to.meta.requiresAuth) {
+    if (!authStore.isAuthenticated) {
+      const guard = to.meta.guard || 'admin';
+      next({ name: `${guard}.login` });
+    } else if (to.meta.guard && authStore.guard !== to.meta.guard) {
+      // 異なるガードの場合はリダイレクト
+      next({ name: `${authStore.guard}.dashboard` });
+    } else {
+      next();
+    }
+  }
+  // ゲスト専用ルート
+  else if (to.meta.guest && authStore.isAuthenticated) {
+    next({ name: `${authStore.guard}.dashboard` });
+  }
+  else {
+    next();
+  }
+});
+
+export default router;
