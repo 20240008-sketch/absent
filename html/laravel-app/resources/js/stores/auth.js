@@ -8,7 +8,8 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: false,
     needs2FA: false,
     email: null,
-    needsPasswordChange: false
+    needsPasswordChange: false,
+    loginType: null, // 'student' or 'parent' or 'admin'
   }),
 
   getters: {
@@ -24,6 +25,7 @@ export const useAuthStore = defineStore('auth', {
         this.needs2FA = true;
         this.email = credentials.email;
         this.guard = 'admin';
+        this.loginType = 'admin';
         return response.data;
       } catch (error) {
         throw error;
@@ -37,6 +39,22 @@ export const useAuthStore = defineStore('auth', {
         this.needs2FA = true;
         this.email = credentials.email;
         this.guard = 'parent';
+        this.loginType = 'parent';
+        this.needsPasswordChange = response.data.needs_password_change || false;
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    // 生徒ログイン
+    async studentLogin(credentials) {
+      try {
+        const response = await axios.post('/api/student/login', credentials);
+        this.needs2FA = true;
+        this.email = credentials.email;
+        this.guard = 'parent'; // 生徒も保護者ガードを使用
+        this.loginType = 'student';
         this.needsPasswordChange = response.data.needs_password_change || false;
         return response.data;
       } catch (error) {
@@ -47,9 +65,14 @@ export const useAuthStore = defineStore('auth', {
     // 2FA検証
     async verify2FA(code) {
       try {
-        const endpoint = this.guard === 'admin' 
-          ? '/api/admin/verify-2fa' 
-          : '/api/parent/verify-2fa';
+        let endpoint;
+        if (this.loginType === 'student') {
+          endpoint = '/api/student/verify-2fa';
+        } else if (this.guard === 'admin') {
+          endpoint = '/api/admin/verify-2fa';
+        } else {
+          endpoint = '/api/parent/verify-2fa';
+        }
         
         const response = await axios.post(endpoint, {
           email: this.email,
@@ -87,6 +110,7 @@ export const useAuthStore = defineStore('auth', {
         this.needs2FA = false;
         this.email = null;
         this.needsPasswordChange = false;
+        this.loginType = null;
       }
     },
 

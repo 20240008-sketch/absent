@@ -1,56 +1,26 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-center mb-6">初回登録</h2>
-    <p class="text-center text-gray-600 mb-8">保護者アカウントを登録してください</p>
+    <h2 class="text-2xl font-bold text-center mb-6">初回登録 - Google Classroom認証</h2>
+    <p class="text-center text-gray-600 mb-8">Google Classroomのメールアドレスとパスワードを入力してください</p>
     
     <form @submit.prevent="handleSubmit">
       <Input
-        id="name"
-        v-model="form.name"
-        type="text"
-        label="お名前"
-        placeholder="山田太郎"
-        required
-        :error="errors.name"
-      />
-      
-      <Input
-        id="email"
-        v-model="form.email"
+        id="classroom_email"
+        v-model="form.classroom_email"
         type="email"
-        label="メールアドレス"
-        placeholder="email@example.com"
+        label="Classroomメールアドレス"
+        placeholder="classroom@example.com"
         required
-        :error="errors.email"
+        :error="errors.classroom_email"
       />
       
       <Input
-        id="password"
-        v-model="form.password"
+        id="classroom_password"
+        v-model="form.classroom_password"
         type="password"
-        label="パスワード"
-        placeholder="8文字以上"
+        label="Classroomパスワード"
         required
-        :error="errors.password"
-      />
-      
-      <Input
-        id="password_confirmation"
-        v-model="form.password_confirmation"
-        type="password"
-        label="パスワード（確認）"
-        placeholder="パスワードを再入力"
-        required
-        :error="errors.password_confirmation"
-      />
-      
-      <Input
-        id="phone"
-        v-model="form.phone"
-        type="tel"
-        label="電話番号"
-        placeholder="090-1234-5678"
-        :error="errors.phone"
+        :error="errors.classroom_password"
       />
       
       <p v-if="errors.general" class="mb-4 text-sm text-red-600">{{ errors.general }}</p>
@@ -61,7 +31,7 @@
         class="w-full"
         :disabled="loading"
       >
-        {{ loading ? '登録中...' : '登録' }}
+        {{ loading ? '認証中...' : '次へ' }}
       </Button>
       
       <div class="text-center mt-4">
@@ -86,19 +56,13 @@ import Button from '../../components/Button.vue';
 const router = useRouter();
 
 const form = reactive({
-  name: '',
-  email: '',
-  password: '',
-  password_confirmation: '',
-  phone: ''
+  classroom_email: '',
+  classroom_password: ''
 });
 
 const errors = reactive({
-  name: '',
-  email: '',
-  password: '',
-  password_confirmation: '',
-  phone: '',
+  classroom_email: '',
+  classroom_password: '',
   general: ''
 });
 
@@ -110,16 +74,20 @@ const handleSubmit = async () => {
   loading.value = true;
   
   try {
-    const response = await axios.post('/api/register', form);
+    const response = await axios.post('/api/register/verify-classroom', form);
     
-    // 登録成功
-    alert('登録が完了しました。ログインしてください。');
-    router.push({ name: 'parent.login' });
+    // Classroom認証成功、保護者情報登録画面へ
+    router.push({ 
+      name: 'register.parent', 
+      query: { 
+        classroom_email: form.classroom_email 
+      } 
+    });
   } catch (error) {
     if (error.response?.data?.errors) {
       Object.assign(errors, error.response.data.errors);
     } else {
-      errors.general = error.response?.data?.message || '登録に失敗しました';
+      errors.general = error.response?.data?.message || 'Classroom認証に失敗しました';
     }
   } finally {
     loading.value = false;

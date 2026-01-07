@@ -15,6 +15,8 @@ class Student extends Model
         'seito_name',
         'seito_number',
         'class_id',
+        'seito_initial_email',
+        'seito_email',
     ];
 
     public function classModel(): BelongsTo

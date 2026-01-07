@@ -12,6 +12,7 @@ import AdminLogin from '../pages/auth/AdminLogin.vue';
 import StudentLogin from '../pages/auth/StudentLogin.vue';
 import ParentLogin from '../pages/auth/ParentLogin.vue';
 import Register from '../pages/auth/Register.vue';
+import RegisterParent from '../pages/auth/RegisterParent.vue';
 import TwoFactorVerify from '../pages/auth/TwoFactorVerify.vue';
 
 // 管理者画面
@@ -70,6 +71,19 @@ const routes = [
         path: '',
         name: 'register',
         component: Register,
+        meta: { guest: true }
+      }
+    ]
+  },
+  // 保護者情報登録
+  {
+    path: '/register/parent',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'register.parent',
+        component: RegisterParent,
         meta: { guest: true }
       }
     ]

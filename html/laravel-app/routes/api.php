@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\ParentLoginController;
+use App\Http\Controllers\Auth\StudentLoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
@@ -22,7 +23,8 @@ use App\Http\Controllers\Parent\AbsenceController;
 */
 
 // 登録
-Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/register/verify-classroom', [RegisterController::class, 'verifyClassroom']);
+Route::post('/register/parent', [RegisterController::class, 'registerParent']);
 
 // 管理者認証ルート
 Route::prefix('admin')->group(function () {
@@ -61,6 +63,13 @@ Route::prefix('admin')->group(function () {
         Route::post('/import/classes', [ImportController::class, 'importClasses']);
         Route::post('/import/teachers', [ImportController::class, 'importTeachers']);
     });
+});
+
+// 生徒認証ルート
+Route::prefix('student')->group(function () {
+    // ログイン・認証
+    Route::post('/login', [StudentLoginController::class, 'login']);
+    Route::post('/verify-2fa', [StudentLoginController::class, 'verify2FA']);
 });
 
 // 保護者認証ルート

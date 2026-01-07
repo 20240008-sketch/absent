@@ -41,7 +41,7 @@ class ParentLoginController extends Controller
         $needsPasswordChange = $parent->parent_initial_password !== null;
 
         // 2FAコード生成・送信
-        $this->twoFactorService->createAndSend($credentials['email'], 'parent');
+        $this->twoFactorService->createAndSend($credentials['email'], 'parent', $parent->parent_name);
 
         return response()->json([
             'message' => '認証コードを送信しました。',

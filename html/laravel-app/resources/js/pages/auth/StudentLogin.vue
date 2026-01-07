@@ -66,9 +66,8 @@ const handleSubmit = async () => {
   loading.value = true;
   
   try {
-    // 現時点では保護者ログインと同じ処理を使用
-    // 後で生徒専用のログイン処理を追加する場合は変更可能
-    await authStore.parentLogin(form);
+    // 生徒ログイン処理
+    await authStore.studentLogin(form);
     router.push({ name: 'parent.verify2fa' });
   } catch (error) {
     if (error.response?.data?.errors) {
