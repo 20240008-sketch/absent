@@ -7,8 +7,11 @@ import AdminLayout from '../layouts/AdminLayout.vue';
 import ParentLayout from '../layouts/ParentLayout.vue';
 
 // 認証画面
+import LoginSelect from '../pages/auth/LoginSelect.vue';
 import AdminLogin from '../pages/auth/AdminLogin.vue';
+import StudentLogin from '../pages/auth/StudentLogin.vue';
 import ParentLogin from '../pages/auth/ParentLogin.vue';
+import Register from '../pages/auth/Register.vue';
 import TwoFactorVerify from '../pages/auth/TwoFactorVerify.vue';
 
 // 管理者画面
@@ -30,7 +33,46 @@ import PasswordChange from '../pages/parent/PasswordChange.vue';
 const routes = [
   {
     path: '/',
-    redirect: '/admin/login'
+    redirect: '/login'
+  },
+  // ログイン選択画面
+  {
+    path: '/login',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'login.select',
+        component: LoginSelect,
+        meta: { guest: true }
+      }
+    ]
+  },
+  // 生徒認証
+  {
+    path: '/student/login',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'student.login',
+        component: StudentLogin,
+        meta: { guest: true }
+      }
+    ]
+  },
+  // 初回登録
+  {
+    path: '/register',
+    component: GuestLayout,
+    children: [
+      {
+        path: '',
+        name: 'register',
+        component: Register,
+        meta: { guest: true }
+      }
+    ]
   },
   // 管理者認証
   {

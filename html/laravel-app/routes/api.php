@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\ParentLoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\ParentController;
@@ -19,6 +20,9 @@ use App\Http\Controllers\Parent\AbsenceController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// 登録
+Route::post('/register', [RegisterController::class, 'register']);
 
 // 管理者認証ルート
 Route::prefix('admin')->group(function () {
