@@ -23,6 +23,7 @@ import StudentList from '../pages/admin/students/List.vue';
 import StudentForm from '../pages/admin/students/Form.vue';
 import ParentList from '../pages/admin/parents/List.vue';
 import ParentForm from '../pages/admin/parents/Form.vue';
+import TodayAbsenceList from '../pages/admin/absences/TodayList.vue';
 import CsvImport from '../pages/admin/CsvImport.vue';
 
 // 保護者画面
@@ -168,6 +169,11 @@ const routes = [
         path: 'parents/:id/edit',
         name: 'admin.parents.edit',
         component: ParentForm
+      },
+      {
+        path: 'absences/today',
+        name: 'admin.absences.today',
+        component: TodayAbsenceList
       },
       {
         path: 'import',

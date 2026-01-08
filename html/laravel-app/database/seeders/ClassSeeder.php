@@ -15,11 +15,35 @@ class ClassSeeder extends Seeder
         $currentYear = date('Y');
         
         $classes = [
-            ['class_id' => 'A101', 'class_name' => '1年A組', 'teacher_name' => '田中太郎', 'teacher_email' => 'tanaka@example.com', 'year_id' => $currentYear],
-            ['class_id' => 'A102', 'class_name' => '1年B組', 'teacher_name' => '佐藤花子', 'teacher_email' => 'sato@example.com', 'year_id' => $currentYear],
-            ['class_id' => 'A201', 'class_name' => '2年A組', 'teacher_name' => '鈴木一郎', 'teacher_email' => 'suzuki@example.com', 'year_id' => $currentYear],
-            ['class_id' => 'A202', 'class_name' => '2年B組', 'teacher_name' => '高橋美咲', 'teacher_email' => 'takahashi@example.com', 'year_id' => $currentYear],
-            ['class_id' => 'A301', 'class_name' => '3年A組', 'teacher_name' => '渡辺健', 'teacher_email' => 'watanabe@example.com', 'year_id' => $currentYear],
+            // 1年生
+            ['class_id' => '1TOKUSHIN', 'class_name' => '1特進', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1tokushin@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1SHINGAKU', 'class_name' => '1進学', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1shingaku@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1CHORI', 'class_name' => '1調理', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1chori@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1JOHO', 'class_name' => '1情報会計', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1joho@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1FUKUSHI', 'class_name' => '1福祉', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1fukushi@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1SOGO1', 'class_name' => '1総合１', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1sogo1@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1SOGO2', 'class_name' => '1総合２', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1sogo2@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '1SOGO3', 'class_name' => '1総合３', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher1sogo3@seiei.ac.jp', 'year_id' => $currentYear],
+            
+            // 2年生
+            ['class_id' => '2TOKUSHIN', 'class_name' => '2特進', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2tokushin@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2SHINGAKU', 'class_name' => '2進学', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2shingaku@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2CHORI', 'class_name' => '2調理', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2chori@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2JOHO', 'class_name' => '2情報会計', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2joho@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2FUKUSHI', 'class_name' => '2福祉', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2fukushi@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2SOGO1', 'class_name' => '2総合１', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2sogo1@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2SOGO2', 'class_name' => '2総合２', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2sogo2@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '2SOGO3', 'class_name' => '2総合３', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher2sogo3@seiei.ac.jp', 'year_id' => $currentYear],
+            
+            // 3年生
+            ['class_id' => '3TOKUSHIN', 'class_name' => '3特進', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3tokushin@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3SHINGAKU', 'class_name' => '3進学', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3shingaku@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3CHORI', 'class_name' => '3調理', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3chori@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3JOHO', 'class_name' => '3情報会計', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3joho@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3FUKUSHI', 'class_name' => '3福祉', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3fukushi@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3SOGO1', 'class_name' => '3総合１', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3sogo1@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3SOGO2', 'class_name' => '3総合２', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3sogo2@seiei.ac.jp', 'year_id' => $currentYear],
+            ['class_id' => '3SOGO3', 'class_name' => '3総合３', 'teacher_name' => '担任未設定', 'teacher_email' => 'teacher3sogo3@seiei.ac.jp', 'year_id' => $currentYear],
         ];
 
         foreach ($classes as $class) {

@@ -26,7 +26,15 @@ class StudentController extends Controller
             });
         }
 
-        // クラスでフィルタ
+        // クラスでフィルタ（class_nameで検索）
+        if ($request->has('class_name')) {
+            $className = $request->class_name;
+            $query->whereHas('classModel', function ($q) use ($className) {
+                $q->where('class_name', $className);
+            });
+        }
+        
+        // 旧形式のclass_idでのフィルタも残す（互換性のため）
         if ($request->has('class_id')) {
             $query->where('class_id', $request->class_id);
         }

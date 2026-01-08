@@ -21,7 +21,7 @@ class Student extends Model
 
     public function classModel(): BelongsTo
     {
-        return $this->belongsTo(ClassModel::class, 'class_id', 'id');
+        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
     }
 
     public function parents(): HasMany

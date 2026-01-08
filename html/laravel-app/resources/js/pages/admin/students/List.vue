@@ -9,16 +9,23 @@
     
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Input
           v-model="filters.search"
           placeholder="生徒ID・氏名で検索"
           @keyup.enter="fetchData"
         />
         <Select
-          v-model="filters.class_id"
-          :options="classOptions"
+          v-model="filters.grade"
+          :options="gradeOptions"
+          placeholder="学年で絞り込み"
+          @change="onGradeChange"
+        />
+        <Select
+          v-model="filters.class_type"
+          :options="classTypeOptions"
           placeholder="クラスで絞り込み"
+          :disabled="!filters.grade"
         />
         <Button variant="primary" @click="fetchData">検索</Button>
         <Button variant="secondary" @click="resetFilters">クリア</Button>
@@ -130,7 +137,35 @@ const deleteTarget = ref(null);
 
 const filters = reactive({
   search: '',
-  class_id: ''
+  grade: '',
+  class_type: ''
+});
+
+const gradeOptions = [
+  { value: '1', label: '1年' },
+  { value: '2', label: '2年' },
+  { value: '3', label: '3年' }
+];
+
+const classTypes = [
+  { value: '特進', label: '特進' },
+  { value: '進学', label: '進学' },
+  { value: '調理', label: '調理' },
+  { value: '情報会計', label: '情報会計' },
+  { value: '福祉', label: '福祉' },
+  { value: '総合１', label: '総合１' },
+  { value: '総合２', label: '総合２' },
+  { value: '総合３', label: '総合３' }
+];
+
+const classTypeOptions = computed(() => {
+  if (!filters.grade) {
+    return [];
+  }
+  return classTypes.map(ct => ({
+    value: ct.value,
+    label: `${filters.grade}${ct.label}`
+  }));
 });
 
 const pagination = reactive({
@@ -140,6 +175,11 @@ const pagination = reactive({
   to: 0,
   total: 0
 });
+
+const onGradeChange = () => {
+  // 学年が変更されたらクラス選択をリセット
+  filters.class_type = '';
+};
 
 const classOptions = computed(() => {
   return classes.value.map(c => ({
@@ -160,10 +200,16 @@ const fetchClasses = async () => {
 const fetchData = async (page = 1) => {
   loading.value = true;
   try {
+    // 学年とクラスタイプからclass_nameを構築
+    let className = '';
+    if (filters.grade && filters.class_type) {
+      className = `${filters.grade}${filters.class_type}`;
+    }
+    
     const params = {
       page,
       search: filters.search || undefined,
-      class_id: filters.class_id || undefined
+      class_name: className || undefined
     };
     
     const response = await adminStore.fetchStudents(params);
@@ -187,7 +233,8 @@ const fetchData = async (page = 1) => {
 
 const resetFilters = () => {
   filters.search = '';
-  filters.class_id = '';
+  filters.grade = '';
+  filters.class_type = '';
   fetchData();
 };
 

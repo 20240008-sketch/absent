@@ -6,11 +6,27 @@ export const useAdminStore = defineStore('admin', {
     classes: [],
     students: [],
     parents: [],
+    dashboardStats: null,
     loading: false,
     error: null
   }),
 
   actions: {
+    // ダッシュボード統計取得
+    async fetchDashboardStats() {
+      this.loading = true;
+      try {
+        const response = await axios.get('/api/admin/dashboard/stats');
+        this.dashboardStats = response.data;
+        return response.data;
+      } catch (error) {
+        this.error = error.response?.data?.message || 'エラーが発生しました';
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     // クラス一覧取得
     async fetchClasses(params = {}) {
       this.loading = true;

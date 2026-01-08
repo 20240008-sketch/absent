@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\ParentController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AbsenceController as AdminAbsenceController;
 use App\Http\Controllers\Parent\AbsenceController;
 
 /*
@@ -39,6 +41,9 @@ Route::prefix('admin')->middleware('web')->group(function () {
         Route::post('/logout', [AdminLoginController::class, 'logout']);
         Route::get('/me', [AdminLoginController::class, 'me']);
         
+        // ダッシュボード
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+        
         // クラス管理
         Route::get('/classes', [ClassController::class, 'index']);
         Route::post('/classes', [ClassController::class, 'store']);
@@ -59,6 +64,11 @@ Route::prefix('admin')->middleware('web')->group(function () {
         Route::get('/parents/{id}', [ParentController::class, 'show']);
         Route::put('/parents/{id}', [ParentController::class, 'update']);
         Route::delete('/parents/{id}', [ParentController::class, 'destroy']);
+        
+        // 欠席情報管理
+        Route::get('/absences/today', [AdminAbsenceController::class, 'today']);
+        Route::get('/absences', [AdminAbsenceController::class, 'index']);
+        Route::get('/absences/{id}', [AdminAbsenceController::class, 'show']);
         
         // CSVインポート
         Route::post('/import/students', [ImportController::class, 'importStudents']);
