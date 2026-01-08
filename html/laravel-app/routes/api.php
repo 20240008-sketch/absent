@@ -23,11 +23,13 @@ use App\Http\Controllers\Parent\AbsenceController;
 */
 
 // 登録
-Route::post('/register/verify-classroom', [RegisterController::class, 'verifyClassroom']);
-Route::post('/register/parent', [RegisterController::class, 'registerParent']);
+Route::middleware('web')->group(function () {
+    Route::post('/register/verify-classroom', [RegisterController::class, 'verifyClassroom']);
+    Route::post('/register/parent', [RegisterController::class, 'registerParent']);
+});
 
 // 管理者認証ルート
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware('web')->group(function () {
     // ログイン・認証
     Route::post('/login', [AdminLoginController::class, 'login']);
     Route::post('/verify-2fa', [AdminLoginController::class, 'verify2FA']);
@@ -66,14 +68,14 @@ Route::prefix('admin')->group(function () {
 });
 
 // 生徒認証ルート
-Route::prefix('student')->group(function () {
+Route::prefix('student')->middleware('web')->group(function () {
     // ログイン・認証
     Route::post('/login', [StudentLoginController::class, 'login']);
     Route::post('/verify-2fa', [StudentLoginController::class, 'verify2FA']);
 });
 
 // 保護者認証ルート
-Route::prefix('parent')->group(function () {
+Route::prefix('parent')->middleware('web')->group(function () {
     // ログイン・認証
     Route::post('/login', [ParentLoginController::class, 'login']);
     Route::post('/verify-2fa', [ParentLoginController::class, 'verify2FA']);

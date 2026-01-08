@@ -4,20 +4,11 @@
     
     <form @submit.prevent="handleSubmit">
       <Input
-        id="email"
-        v-model="form.email"
-        type="email"
-        label="メールアドレス"
-        placeholder="email@example.com"
-        required
-        :error="errors.email"
-      />
-      
-      <Input
         id="password"
         v-model="form.password"
         type="password"
         label="パスワード"
+        placeholder="パスワードを入力してください"
         required
         :error="errors.password"
       />
@@ -47,12 +38,10 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const form = reactive({
-  email: '',
   password: ''
 });
 
 const errors = reactive({
-  email: '',
   password: '',
   general: ''
 });
@@ -60,14 +49,17 @@ const errors = reactive({
 const loading = ref(false);
 
 const handleSubmit = async () => {
-  errors.email = '';
   errors.password = '';
   errors.general = '';
   loading.value = true;
   
   try {
-    await authStore.adminLogin(form);
-    router.push({ name: 'admin.verify2fa' });
+    const response = await authStore.adminLogin(form);
+    // 2FAなしで直接ダッシュボードへ
+    authStore.user = response.admin;
+    authStore.isAuthenticated = true;
+    authStore.guard = 'admin';
+    router.push({ name: 'admin.dashboard' });
   } catch (error) {
     if (error.response?.data?.errors) {
       Object.assign(errors, error.response.data.errors);

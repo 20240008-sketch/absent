@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'parent.auth' => \App\Http\Middleware\ParentAuth::class,
             'two_factor' => \App\Http\Middleware\TwoFactorVerified::class,
         ]);
+        
+        // APIルートでCSRF検証を無効化
+        $middleware->validateCsrfTokens(except: [
+            'api/*'
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

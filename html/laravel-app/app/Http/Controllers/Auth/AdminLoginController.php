@@ -19,42 +19,41 @@ class AdminLoginController extends Controller
     }
 
     /**
-     * ログイン処理（第1段階：メール・パスワード認証）
+     * ログイン処理（パスワード認証のみ - 2FAなし）
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        $admin = Admin::where('email', $request->email)->first();
+        // 固定の管理者アカウントを取得（最初の管理者）
+        $admin = Admin::first();
 
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
+        if (!$admin) {
             return response()->json([
-                'message' => 'メールアドレスまたはパスワードが正しくありません'
+                'message' => '管理者アカウントが存在しません'
             ], 401);
         }
 
-        // 2段階認証コードを生成・送信
-        $sent = $this->twoFactorService->createAndSend(
-            $admin->email,
-            'admin',
-            $admin->name
-        );
-
-        if (!$sent) {
+        // パスワードチェック
+        if (!Hash::check($request->password, $admin->password)) {
             return response()->json([
-                'message' => '認証コードの送信に失敗しました'
-            ], 500);
+                'message' => 'パスワードが正しくありません'
+            ], 401);
         }
 
-        // 一時セッションに保存
-        session(['two_factor_admin_id' => $admin->id]);
+        // 直接ログイン（2FAなし）
+        Auth::guard('admin')->login($admin);
+        $request->session()->regenerate();
 
         return response()->json([
-            'message' => '認証コードをメールで送信しました',
-            'requires_2fa' => true,
+            'message' => 'ログインに成功しました',
+            'admin' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+            ],
         ]);
     }
 

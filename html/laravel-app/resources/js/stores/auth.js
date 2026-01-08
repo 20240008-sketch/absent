@@ -18,14 +18,15 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // 管理者ログイン
+    // 管理者ログイン（2FAなし）
     async adminLogin(credentials) {
       try {
         const response = await axios.post('/api/admin/login', credentials);
-        this.needs2FA = true;
-        this.email = credentials.email;
+        this.user = response.data.admin;
+        this.isAuthenticated = true;
         this.guard = 'admin';
         this.loginType = 'admin';
+        this.needs2FA = false;
         return response.data;
       } catch (error) {
         throw error;
@@ -66,18 +67,20 @@ export const useAuthStore = defineStore('auth', {
     async verify2FA(code) {
       try {
         let endpoint;
+        let requestData = { code };
+        
         if (this.loginType === 'student') {
           endpoint = '/api/student/verify-2fa';
+          requestData.email = this.email;
         } else if (this.guard === 'admin') {
           endpoint = '/api/admin/verify-2fa';
+          // 管理者はemailを送らない
         } else {
           endpoint = '/api/parent/verify-2fa';
+          requestData.email = this.email;
         }
         
-        const response = await axios.post(endpoint, {
-          email: this.email,
-          code
-        });
+        const response = await axios.post(endpoint, requestData);
 
         this.user = response.data.parent || response.data.admin || response.data.user;
         this.isAuthenticated = true;
