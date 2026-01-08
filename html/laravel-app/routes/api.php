@@ -66,6 +66,8 @@ Route::prefix('admin')->middleware('web')->group(function () {
         Route::delete('/parents/{id}', [ParentController::class, 'destroy']);
         
         // 欠席情報管理
+        Route::get('/absences/stats', [AdminAbsenceController::class, 'stats']);
+        Route::get('/absences/monthly', [AdminAbsenceController::class, 'monthly']);
         Route::get('/absences/today', [AdminAbsenceController::class, 'today']);
         Route::get('/absences', [AdminAbsenceController::class, 'index']);
         Route::get('/absences/{id}', [AdminAbsenceController::class, 'show']);

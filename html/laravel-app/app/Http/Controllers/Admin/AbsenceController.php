@@ -39,6 +39,14 @@ class AbsenceController extends Controller
             $query->where('division', $request->division);
         }
 
+        // 学年でフィルタ
+        if ($request->has('grade')) {
+            $grade = $request->grade;
+            $query->whereHas('student.classModel', function ($q) use ($grade) {
+                $q->where('class_name', 'LIKE', $grade . '%');
+            });
+        }
+
         // クラスでフィルタ
         if ($request->has('class_name')) {
             $query->whereHas('student.classModel', function ($q) use ($request) {
@@ -51,6 +59,66 @@ class AbsenceController extends Controller
                          ->paginate($request->get('per_page', 20));
 
         return response()->json($absences);
+    }
+
+    /**
+     * 欠席統計情報取得
+     */
+    public function stats()
+    {
+        // 本日の欠席数
+        $today = Absence::whereDate('absence_date', Carbon::today())
+                       ->where('division', '欠席')
+                       ->count();
+
+        // 今週の欠席数（月曜日〜日曜日）
+        $week = Absence::whereBetween('absence_date', [
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek()
+                ])
+                ->where('division', '欠席')
+                ->count();
+
+        // 今月の欠席数
+        $month = Absence::whereYear('absence_date', Carbon::now()->year)
+                       ->whereMonth('absence_date', Carbon::now()->month)
+                       ->where('division', '欠席')
+                       ->count();
+
+        // 総欠席数
+        $total = Absence::where('division', '欠席')->count();
+
+        return response()->json([
+            'today' => $today,
+            'week' => $week,
+            'month' => $month,
+            'total' => $total,
+        ]);
+    }
+
+    /**
+     * 月別欠席統計取得
+     */
+    public function monthly()
+    {
+        $currentYear = Carbon::now()->year;
+        $monthlyData = [];
+
+        // 過去6ヶ月分のデータを取得
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $count = Absence::whereYear('absence_date', $date->year)
+                           ->whereMonth('absence_date', $date->month)
+                           ->where('division', '欠席')
+                           ->count();
+
+            $monthlyData[] = [
+                'month' => $date->format('Y年n月'),
+                'count' => $count
+            ];
+        }
+
+        return response()->json($monthlyData);
     }
 
     /**

@@ -35,6 +35,13 @@
               保護者管理
             </router-link>
             <router-link
+              to="/admin/absences"
+              class="px-3 py-2 text-sm font-medium rounded hover:bg-gray-100 whitespace-nowrap"
+              :class="isActive('/admin/absences') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'"
+            >
+              欠席記録
+            </router-link>
+            <router-link
               to="/admin/import"
               class="px-3 py-2 text-sm font-medium rounded hover:bg-gray-100 whitespace-nowrap"
               :class="isActive('/admin/import') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'"

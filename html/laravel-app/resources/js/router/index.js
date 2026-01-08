@@ -23,13 +23,14 @@ import StudentList from '../pages/admin/students/List.vue';
 import StudentForm from '../pages/admin/students/Form.vue';
 import ParentList from '../pages/admin/parents/List.vue';
 import ParentForm from '../pages/admin/parents/Form.vue';
+import AdminAbsenceList from '../pages/admin/absences/List.vue';
 import TodayAbsenceList from '../pages/admin/absences/TodayList.vue';
 import CsvImport from '../pages/admin/CsvImport.vue';
 
 // 保護者画面
 import ParentDashboard from '../pages/parent/Dashboard.vue';
-import AbsenceList from '../pages/parent/absences/List.vue';
-import AbsenceForm from '../pages/parent/absences/Form.vue';
+import ParentAbsenceList from '../pages/parent/absences/List.vue';
+import ParentAbsenceForm from '../pages/parent/absences/Form.vue';
 import PasswordChange from '../pages/parent/PasswordChange.vue';
 
 const routes = [
@@ -171,6 +172,11 @@ const routes = [
         component: ParentForm
       },
       {
+        path: 'absences',
+        name: 'admin.absences',
+        component: AdminAbsenceList
+      },
+      {
         path: 'absences/today',
         name: 'admin.absences.today',
         component: TodayAbsenceList
@@ -221,17 +227,17 @@ const routes = [
       {
         path: 'absences',
         name: 'parent.absences',
-        component: AbsenceList
+        component: ParentAbsenceList
       },
       {
         path: 'absences/create',
         name: 'parent.absences.create',
-        component: AbsenceForm
+        component: ParentAbsenceForm
       },
       {
         path: 'absences/:id/edit',
         name: 'parent.absences.edit',
-        component: AbsenceForm
+        component: ParentAbsenceForm
       },
       {
         path: 'change-password',
