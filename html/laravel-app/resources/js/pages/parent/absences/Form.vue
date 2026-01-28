@@ -24,11 +24,12 @@
         />
         
         <Input
-          v-if="form.division === '遅刻'"
+          v-if="form.division === '遅刻' || form.division === '早退'"
           id="scheduled_time"
           v-model="form.scheduled_time"
-          type="time"
-          label="登校予定時刻"
+          type="text"
+          :label="form.division === '遅刻' ? '登校予定時刻' : '早退予定時刻'"
+          placeholder="例: 3限目, 午後から"
           :error="errors.scheduled_time"
         />
         
@@ -108,7 +109,8 @@ const loading = ref(false);
 
 const divisionOptions = [
   { value: '欠席', label: '欠席' },
-  { value: '遅刻', label: '遅刻' }
+  { value: '遅刻', label: '遅刻' },
+  { value: '早退', label: '早退' }
 ];
 
 // 区分が変更されたら登校予定時刻をクリア
@@ -142,11 +144,18 @@ const handleSubmit = async () => {
   Object.keys(errors).forEach(key => errors[key] = '');
   loading.value = true;
   
+  console.log('Form data before submit:', form);
+  
   // 欠席の場合は登校予定時刻をnullにする
   const submitData = {
-    ...form,
-    scheduled_time: form.division === '遅刻' ? form.scheduled_time : null
+    seito_id: form.seito_id,
+    division: form.division,
+    absence_date: form.absence_date,
+    scheduled_time: (form.division === '遅刻' || form.division === '早退') ? form.scheduled_time : null,
+    reason: form.reason
   };
+  
+  console.log('Submit data:', submitData);
   
   try {
     if (isEdit.value) {
@@ -156,6 +165,9 @@ const handleSubmit = async () => {
     }
     router.push('/parent/absences');
   } catch (error) {
+    console.error('Submit error:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Validation errors:', error.response?.data?.errors);
     if (error.response?.data?.errors) {
       Object.assign(errors, error.response.data.errors);
     } else {
@@ -166,9 +178,23 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // ユーザー情報がない場合は取得
+  if (!authStore.user || !authStore.user.seito_id) {
+    try {
+      await authStore.fetchUser();
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      errors.general = 'ユーザー情報の取得に失敗しました';
+      return;
+    }
+  }
+  
   // 生徒IDを設定
   form.seito_id = authStore.user?.seito_id || '';
+  
+  console.log('onMounted - authStore.user:', authStore.user);
+  console.log('onMounted - form.seito_id:', form.seito_id);
   
   // デフォルトの日付を今日に設定（新規作成時のみ）
   if (!isEdit.value) {

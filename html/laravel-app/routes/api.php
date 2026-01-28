@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AbsenceController as AdminAbsenceController;
 use App\Http\Controllers\Parent\AbsenceController;
+use App\Http\Controllers\DemoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,11 @@ use App\Http\Controllers\Parent\AbsenceController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// デモモード（試作段階用）
+Route::middleware('web')->group(function () {
+    Route::get('/demo/parent-login', [DemoController::class, 'parentLogin']);
+});
 
 // 登録
 Route::middleware('web')->group(function () {

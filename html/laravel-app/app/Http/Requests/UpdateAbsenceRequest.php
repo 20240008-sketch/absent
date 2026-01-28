@@ -22,10 +22,10 @@ class UpdateAbsenceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'division' => 'sometimes|string|in:欠席,遅刻',
+            'division' => 'sometimes|string|in:欠席,遅刻,早退',
             'reason' => 'sometimes|string|max:1000',
-            'scheduled_time' => 'nullable|date_format:H:i',
-            'absence_date' => 'sometimes|date|after_or_equal:today',
+            'scheduled_time' => 'nullable|string|max:50',
+            'absence_date' => 'sometimes|date',
         ];
     }
 

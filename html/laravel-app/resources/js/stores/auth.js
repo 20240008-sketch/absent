@@ -149,6 +149,39 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         throw error;
       }
+    },
+
+    // お試しモード（管理者として直接ログイン）
+    async demoAdminLogin() {
+      try {
+        const response = await axios.post('/api/admin/login', {
+          password: 'seiei2026'
+        });
+        this.user = response.data.admin;
+        this.isAuthenticated = true;
+        this.guard = 'admin';
+        this.loginType = 'admin';
+        this.needs2FA = false;
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
+    },
+
+    // お試しモード（保護者として直接ログイン）
+    async demoParentLogin() {
+      try {
+        const response = await axios.get('/api/demo/parent-login');
+        this.user = response.data.parent;
+        this.isAuthenticated = true;
+        this.guard = 'parent';
+        this.loginType = 'parent';
+        this.needs2FA = false;
+        this.needsPasswordChange = false;
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
     }
   }
 });

@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateAbsenceRequest;
 use App\Models\Absence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AbsenceController extends Controller
 {
@@ -48,7 +49,17 @@ class AbsenceController extends Controller
      */
     public function store(StoreAbsenceRequest $request)
     {
+        Log::info('Absence store called', [
+            'request_data' => $request->all(),
+            'validated' => $request->validated(),
+        ]);
+
         $parent = Auth::guard('parent')->user();
+        
+        Log::info('Parent info', [
+            'parent_seito_id' => $parent->seito_id,
+            'request_seito_id' => $request->seito_id,
+        ]);
 
         // 自分の子供の欠席連絡のみ登録可能
         if ($request->seito_id !== $parent->seito_id) {

@@ -22,11 +22,11 @@ class StoreAbsenceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'seito_id' => 'required|integer|exists:students,seito_id',
-            'division' => 'required|string|in:欠席,遅刻',
+            'seito_id' => 'required|string|exists:students,seito_id',
+            'division' => 'required|string|in:欠席,遅刻,早退',
             'reason' => 'required|string|max:1000',
-            'scheduled_time' => 'nullable|date_format:H:i',
-            'absence_date' => 'required|date|after_or_equal:today',
+            'scheduled_time' => 'nullable|string|max:50',
+            'absence_date' => 'required|date',
         ];
     }
 
