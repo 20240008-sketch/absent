@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Admin;
 use App\Models\ClassModel;
+use App\Models\ParentModel;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class CsvImportService
@@ -118,7 +121,7 @@ class CsvImportService
                     continue;
                 }
                 
-                // クラスIDから実際のIDを取得
+                // クラスが存在するか確認
                 $class = ClassModel::where('class_id', $row['class_id'])->first();
                 
                 if (!$class) {
@@ -136,7 +139,8 @@ class CsvImportService
                     [
                         'seito_name' => $row['seito_name'],
                         'seito_number' => $row['seito_number'],
-                        'class_id' => $class->id,
+                        'class_id' => $row['class_id'], // 文字列のclass_idをそのまま使用
+                        'seito_initial_email' => $row['seito_initial_email'] ?? null,
                     ]
                 );
                 
@@ -243,5 +247,136 @@ class CsvImportService
         }
         
         return true;
+    }
+
+    /**
+     * 保護者データをインポート
+     */
+    public function importParents(array $data): array
+    {
+        $errors = [];
+        $success = 0;
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($data as $index => $row) {
+                $validator = Validator::make($row, [
+                    'seito_id' => 'required|string',
+                    'parent_name' => 'required|string|max:255',
+                    'parent_email' => 'required|email|max:255',
+                    'parent_tel' => 'nullable|string|max:20',
+                    'parent_relationship' => 'required|string|max:50',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => $validator->errors()->all(),
+                    ];
+                    continue;
+                }
+                
+                // 生徒が存在するか確認
+                $student = Student::where('seito_id', $row['seito_id'])->first();
+                
+                if (!$student) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => ["生徒ID '{$row['seito_id']}' が見つかりません"],
+                    ];
+                    continue;
+                }
+                
+                // 初期パスワード生成（seito_id + 誕生日下4桁、またはデフォルト）
+                $initialPassword = $row['initial_password'] ?? 'password123';
+                
+                // 既存チェック（更新または新規作成）
+                ParentModel::updateOrCreate(
+                    ['parent_email' => $row['parent_email']],
+                    [
+                        'seito_id' => $row['seito_id'],
+                        'parent_name' => $row['parent_name'],
+                        'parent_tel' => $row['parent_tel'] ?? null,
+                        'parent_relationship' => $row['parent_relationship'],
+                        'parent_password' => Hash::make($initialPassword),
+                        'parent_initial_password' => $initialPassword,
+                    ]
+                );
+                
+                $success++;
+            }
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+        return [
+            'success' => $success,
+            'errors' => $errors,
+            'total' => count($data),
+        ];
+    }
+
+    /**
+     * 管理者データをインポート
+     */
+    public function importAdmins(array $data): array
+    {
+        $errors = [];
+        $success = 0;
+        
+        DB::beginTransaction();
+        
+        try {
+            foreach ($data as $index => $row) {
+                $validator = Validator::make($row, [
+                    'name' => 'required|string|max:255',
+                    'email' => 'nullable|email|max:255',
+                    'password' => 'required|string|min:6',
+                ]);
+                
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'row' => $index + 2,
+                        'data' => $row,
+                        'errors' => $validator->errors()->all(),
+                    ];
+                    continue;
+                }
+                
+                // emailがある場合はそれをユニークキーとし、ない場合はnameをユニークキーとする
+                $uniqueKey = !empty($row['email']) ? ['email' => $row['email']] : ['name' => $row['name']];
+                
+                // 既存チェック（更新または新規作成）
+                Admin::updateOrCreate(
+                    $uniqueKey,
+                    [
+                        'name' => $row['name'],
+                        'email' => $row['email'] ?? null,
+                        'password' => Hash::make($row['password']),
+                    ]
+                );
+                
+                $success++;
+            }
+            
+            DB::commit();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        
+        return [
+            'success' => $success,
+            'errors' => $errors,
+            'total' => count($data),
+        ];
     }
 }

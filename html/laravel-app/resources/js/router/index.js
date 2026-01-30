@@ -25,7 +25,7 @@ import ParentList from '../pages/admin/parents/List.vue';
 import ParentForm from '../pages/admin/parents/Form.vue';
 import AdminAbsenceList from '../pages/admin/absences/List.vue';
 import TodayAbsenceList from '../pages/admin/absences/TodayList.vue';
-import CsvImport from '../pages/admin/CsvImport.vue';
+import CsvImport from '../pages/admin/import/Index.vue';
 
 // 保護者画面
 import ParentDashboard from '../pages/parent/Dashboard.vue';

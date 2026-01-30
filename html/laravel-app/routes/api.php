@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\ParentController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\CsvImportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AbsenceController as AdminAbsenceController;
 use App\Http\Controllers\Parent\AbsenceController;
@@ -79,7 +80,12 @@ Route::prefix('admin')->middleware('web')->group(function () {
         Route::get('/absences/{id}', [AdminAbsenceController::class, 'show']);
         
         // CSVインポート
-        Route::post('/import/students', [ImportController::class, 'importStudents']);
+        Route::post('/import/students', [CsvImportController::class, 'importStudents']);
+        Route::post('/import/parents', [CsvImportController::class, 'importParents']);
+        Route::post('/import/admins', [CsvImportController::class, 'importAdmins']);
+        Route::get('/import/template/{type}', [CsvImportController::class, 'downloadTemplate']);
+        
+        // 旧インポート（後方互換性）
         Route::post('/import/classes', [ImportController::class, 'importClasses']);
         Route::post('/import/teachers', [ImportController::class, 'importTeachers']);
     });
