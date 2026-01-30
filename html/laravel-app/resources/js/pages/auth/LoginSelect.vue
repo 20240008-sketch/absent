@@ -7,14 +7,6 @@
       <Button
         variant="primary"
         class="w-full py-4 text-lg"
-        @click="goToStudentLogin"
-      >
-        生徒ログイン
-      </Button>
-      
-      <Button
-        variant="primary"
-        class="w-full py-4 text-lg"
         @click="goToParentLogin"
       >
         保護者ログイン
@@ -73,12 +65,6 @@ import Button from '../../components/Button.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-const goToStudentLogin = () => {
-  // 現時点では生徒ログインは保護者ログインと同じページに遷移
-  // 後で生徒専用ログインページを作成する場合は変更可能
-  router.push({ name: 'student.login' });
-};
 
 const goToParentLogin = () => {
   router.push({ name: 'parent.login' });

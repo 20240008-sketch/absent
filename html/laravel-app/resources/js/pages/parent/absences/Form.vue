@@ -62,7 +62,7 @@
             variant="success"
             :disabled="loading"
           >
-            {{ loading ? '保存中...' : '保存' }}
+            {{ loading ? (isEdit ? '保存中...' : '登録中...') : (isEdit ? '保存' : '登録') }}
           </Button>
           <router-link to="/parent/absences">
             <Button variant="secondary">キャンセル</Button>
