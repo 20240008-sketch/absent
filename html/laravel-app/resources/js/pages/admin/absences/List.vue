@@ -87,12 +87,25 @@
     
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <h2 class="text-lg font-semibold mb-4">日付別検索</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <h2 class="text-lg font-semibold mb-4">検索フィルター</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Input
-          v-model="filters.date"
+          v-model="filters.date_from"
           type="date"
-          label="日付"
+          label="開始日"
+          placeholder="開始日"
+        />
+        <Input
+          v-model="filters.date_to"
+          type="date"
+          label="終了日"
+          placeholder="終了日"
+        />
+        <Select
+          v-model="filters.class_name"
+          :options="classNameOptions"
+          placeholder="クラスで絞り込み"
+          label="クラス"
         />
         <Select
           v-model="filters.division"
@@ -119,8 +132,16 @@
         <h2 class="text-lg font-semibold">
           <span v-if="isFilteredByToday" class="text-red-600">📌 本日の欠席</span>
           <span v-else>欠席一覧</span>
-          <span v-if="filters.date && !isFilteredByToday" class="text-sm text-gray-600 ml-2">
-            ({{ filters.date }})
+          <span v-if="filters.date_from || filters.date_to" class="text-sm text-gray-600 ml-2">
+            <template v-if="filters.date_from && filters.date_to">
+              ({{ filters.date_from }} 〜 {{ filters.date_to }})
+            </template>
+            <template v-else-if="filters.date_from">
+              ({{ filters.date_from }} 以降)
+            </template>
+            <template v-else>
+              (〜 {{ filters.date_to }})
+            </template>
           </span>
         </h2>
       </div>
@@ -227,7 +248,9 @@ const showOlderMonths = ref(false);
 const loading = ref(false);
 
 const filters = reactive({
-  date: '',
+  date_from: '',
+  date_to: '',
+  class_name: '',
   division: '',
   grade: ''
 });
@@ -254,7 +277,7 @@ const olderMonths = computed(() => {
 const isFilteredByToday = computed(() => {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  return filters.date === todayStr;
+  return filters.date_from === todayStr && filters.date_to === todayStr;
 });
 
 const divisionOptions = [
@@ -267,6 +290,33 @@ const gradeOptions = [
   { value: '1', label: '1年' },
   { value: '2', label: '2年' },
   { value: '3', label: '3年' }
+];
+
+const classNameOptions = [
+  { value: '1情報会計', label: '1情報会計' },
+  { value: '1特進', label: '1特進' },
+  { value: '1福祉', label: '1福祉' },
+  { value: '1総合１', label: '1総合１' },
+  { value: '1総合２', label: '1総合２' },
+  { value: '1総合３', label: '1総合３' },
+  { value: '1調理', label: '1調理' },
+  { value: '1進学', label: '1進学' },
+  { value: '2情報会計', label: '2情報会計' },
+  { value: '2特進', label: '2特進' },
+  { value: '2福祉', label: '2福祉' },
+  { value: '2総合１', label: '2総合１' },
+  { value: '2総合２', label: '2総合２' },
+  { value: '2総合３', label: '2総合３' },
+  { value: '2調理', label: '2調理' },
+  { value: '2進学', label: '2進学' },
+  { value: '3情報会計', label: '3情報会計' },
+  { value: '3特進', label: '3特進' },
+  { value: '3福祉', label: '3福祉' },
+  { value: '3総合１', label: '3総合１' },
+  { value: '3総合２', label: '3総合２' },
+  { value: '3総合３', label: '3総合３' },
+  { value: '3調理', label: '3調理' },
+  { value: '3進学', label: '3進学' }
 ];
 
 const maxMonthlyCount = computed(() => {
@@ -326,7 +376,9 @@ const fetchAbsences = async (page = 1) => {
   try {
     const params = {
       page,
-      date: filters.date || undefined,
+      date_from: filters.date_from || undefined,
+      date_to: filters.date_to || undefined,
+      class_name: filters.class_name || undefined,
       division: filters.division || undefined,
       grade: filters.grade || undefined
     };
@@ -351,7 +403,9 @@ const fetchAbsences = async (page = 1) => {
 };
 
 const resetFilters = () => {
-  filters.date = '';
+  filters.date_from = '';
+  filters.date_to = '';
+  filters.class_name = '';
   filters.division = '';
   filters.grade = '';
   fetchAbsences();
@@ -360,17 +414,10 @@ const resetFilters = () => {
 const filterByToday = () => {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  
-  // 既に本日でフィルター中なら解除
-  if (filters.date === todayStr) {
-    resetFilters();
-  } else {
-    // 本日の日付でフィルター
-    filters.date = todayStr;
-    filters.division = '欠席'; // 欠席のみ
-    filters.grade = '';
-    fetchAbsences();
-  }
+  filters.date_from = todayStr;
+  filters.date_to = todayStr;
+  filters.division = '欠席';
+  fetchAbsences();
 };
 
 const changePage = (page) => {

@@ -43,19 +43,29 @@
 
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Input
-          v-model="filters.date"
+          v-model="filters.date_from"
           type="date"
-          placeholder="日付"
+          placeholder="開始日"
+          label="開始日"
+        />
+        <Input
+          v-model="filters.date_to"
+          type="date"
+          placeholder="終了日"
+          label="終了日"
         />
         <Select
           v-model="filters.division"
           :options="divisionOptions"
           placeholder="区分"
+          label="区分"
         />
-        <Button variant="primary" @click="fetchAbsences">検索</Button>
-        <Button variant="secondary" @click="resetFilters">クリア</Button>
+        <div class="flex items-end gap-2 lg:col-span-2">
+          <Button variant="primary" @click="fetchAbsences" class="flex-1">検索</Button>
+          <Button variant="secondary" @click="resetFilters" class="flex-1">クリア</Button>
+        </div>
       </div>
     </div>
 
@@ -157,7 +167,8 @@ const absences = ref([]);
 const loading = ref(false);
 
 const filters = reactive({
-  date: '',
+  date_from: '',
+  date_to: '',
   division: ''
 });
 
@@ -190,7 +201,8 @@ const fetchAbsences = async (page = 1) => {
     const params = {
       page,
       class_id: route.params.id,
-      date: filters.date || undefined,
+      date_from: filters.date_from || undefined,
+      date_to: filters.date_to || undefined,
       division: filters.division || undefined
     };
 
@@ -214,7 +226,8 @@ const fetchAbsences = async (page = 1) => {
 };
 
 const resetFilters = () => {
-  filters.date = '';
+  filters.date_from = '';
+  filters.date_to = '';
   filters.division = '';
   fetchAbsences();
 };

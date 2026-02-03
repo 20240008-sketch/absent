@@ -29,18 +29,27 @@ class AbsenceController extends Controller
     {
         $query = Absence::with(['student.classModel']);
 
-        // 日付でフィルタ
-        if ($request->has('date')) {
+        // 日付範囲でフィルタ
+        if ($request->has('date_from') && $request->date_from !== '') {
+            $query->whereDate('absence_date', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to !== '') {
+            $query->whereDate('absence_date', '<=', $request->date_to);
+        }
+
+        // 単一日付でフィルタ（後方互換性）
+        if ($request->has('date') && $request->date !== '') {
             $query->whereDate('absence_date', $request->date);
         }
 
         // 区分でフィルタ
-        if ($request->has('division')) {
+        if ($request->has('division') && $request->division !== '') {
             $query->where('division', $request->division);
         }
 
         // 学年でフィルタ
-        if ($request->has('grade')) {
+        if ($request->has('grade') && $request->grade !== '') {
             $grade = $request->grade;
             $query->whereHas('student.classModel', function ($q) use ($grade) {
                 $q->where('class_name', 'LIKE', $grade . '%');
