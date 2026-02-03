@@ -10,9 +10,14 @@
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Select
+          v-model="filters.class_name"
+          :options="classNameOptions"
+          placeholder="クラス名を選択"
+        />
         <Input
-          v-model="filters.search"
-          placeholder="クラス名・教員名で検索"
+          v-model="filters.teacher_name"
+          placeholder="教員名で検索"
           @keyup.enter="fetchData"
         />
         <Input
@@ -21,8 +26,10 @@
           placeholder="年度"
           @keyup.enter="fetchData"
         />
-        <Button variant="primary" @click="fetchData">検索</Button>
-        <Button variant="secondary" @click="resetFilters">クリア</Button>
+        <div class="flex gap-2">
+          <Button variant="primary" @click="fetchData">検索</Button>
+          <Button variant="secondary" @click="resetFilters">クリア</Button>
+        </div>
       </div>
     </div>
     
@@ -56,6 +63,12 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.teacher_email }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.year_id }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <router-link
+                  :to="`/admin/classes/${item.id}`"
+                  class="text-green-600 hover:text-green-900 mr-4"
+                >
+                  詳細
+                </router-link>
                 <router-link
                   :to="`/admin/classes/${item.id}/edit`"
                   class="text-blue-600 hover:text-blue-900 mr-4"
@@ -120,6 +133,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useAdminStore } from '../../../stores/admin';
 import Button from '../../../components/Button.vue';
 import Input from '../../../components/Input.vue';
+import Select from '../../../components/Select.vue';
 import Modal from '../../../components/Modal.vue';
 
 const adminStore = useAdminStore();
@@ -129,8 +143,37 @@ const loading = ref(false);
 const showDeleteModal = ref(false);
 const deleteTarget = ref(null);
 
+// クラス名の選択肢
+const classNameOptions = [
+  { value: '1情報会計', label: '1情報会計' },
+  { value: '1特進', label: '1特進' },
+  { value: '1福祉', label: '1福祉' },
+  { value: '1総合１', label: '1総合１' },
+  { value: '1総合２', label: '1総合２' },
+  { value: '1総合３', label: '1総合３' },
+  { value: '1調理', label: '1調理' },
+  { value: '1進学', label: '1進学' },
+  { value: '2情報会計', label: '2情報会計' },
+  { value: '2特進', label: '2特進' },
+  { value: '2福祉', label: '2福祉' },
+  { value: '2総合１', label: '2総合１' },
+  { value: '2総合２', label: '2総合２' },
+  { value: '2総合３', label: '2総合３' },
+  { value: '2調理', label: '2調理' },
+  { value: '2進学', label: '2進学' },
+  { value: '3情報会計', label: '3情報会計' },
+  { value: '3特進', label: '3特進' },
+  { value: '3福祉', label: '3福祉' },
+  { value: '3総合１', label: '3総合１' },
+  { value: '3総合２', label: '3総合２' },
+  { value: '3総合３', label: '3総合３' },
+  { value: '3調理', label: '3調理' },
+  { value: '3進学', label: '3進学' }
+];
+
 const filters = reactive({
-  search: '',
+  class_name: '',
+  teacher_name: '',
   year_id: ''
 });
 
@@ -147,7 +190,9 @@ const fetchData = async (page = 1) => {
   try {
     const params = {
       page,
-      search: filters.search || undefined,
+      per_page: 50,
+      class_name: filters.class_name || undefined,
+      teacher_name: filters.teacher_name || undefined,
       year_id: filters.year_id || undefined
     };
     
@@ -171,7 +216,8 @@ const fetchData = async (page = 1) => {
 };
 
 const resetFilters = () => {
-  filters.search = '';
+  filters.class_name = '';
+  filters.teacher_name = '';
   filters.year_id = '';
   fetchData();
 };

@@ -19,6 +19,7 @@ import TwoFactorVerify from '../pages/auth/TwoFactorVerify.vue';
 import AdminDashboard from '../pages/admin/Dashboard.vue';
 import ClassList from '../pages/admin/classes/List.vue';
 import ClassForm from '../pages/admin/classes/Form.vue';
+import ClassDetail from '../pages/admin/classes/Detail.vue';
 import StudentList from '../pages/admin/students/List.vue';
 import StudentForm from '../pages/admin/students/Form.vue';
 import ParentList from '../pages/admin/parents/List.vue';
@@ -135,6 +136,11 @@ const routes = [
         path: 'classes/create',
         name: 'admin.classes.create',
         component: ClassForm
+      },
+      {
+        path: 'classes/:id',
+        name: 'admin.classes.detail',
+        component: ClassDetail
       },
       {
         path: 'classes/:id/edit',

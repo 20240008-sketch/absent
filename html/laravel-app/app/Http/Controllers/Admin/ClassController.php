@@ -17,18 +17,18 @@ class ClassController extends Controller
     {
         $query = ClassModel::query();
 
-        // 検索
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('class_name', 'like', "%{$search}%")
-                  ->orWhere('class_id', 'like', "%{$search}%")
-                  ->orWhere('teacher_name', 'like', "%{$search}%");
-            });
+        // クラス名でフィルタ
+        if ($request->has('class_name') && $request->class_name !== '') {
+            $query->where('class_name', $request->class_name);
+        }
+
+        // 教員名でフィルタ
+        if ($request->has('teacher_name') && $request->teacher_name !== '') {
+            $query->where('teacher_name', 'like', "%{$request->teacher_name}%");
         }
 
         // 年度でフィルタ
-        if ($request->has('year_id')) {
+        if ($request->has('year_id') && $request->year_id !== '') {
             $query->where('year_id', $request->year_id);
         }
 

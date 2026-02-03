@@ -47,7 +47,14 @@ class AbsenceController extends Controller
             });
         }
 
-        // クラスでフィルタ
+        // クラスIDでフィルタ
+        if ($request->has('class_id')) {
+            $query->whereHas('student', function ($q) use ($request) {
+                $q->where('class_id', $request->class_id);
+            });
+        }
+
+        // クラス名でフィルタ
         if ($request->has('class_name')) {
             $query->whereHas('student.classModel', function ($q) use ($request) {
                 $q->where('class_name', $request->class_name);
