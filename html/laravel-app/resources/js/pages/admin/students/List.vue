@@ -9,19 +9,21 @@
     
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid gap-4" :class="isSuperAdmin ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-3'">
         <Input
           v-model="filters.search"
           placeholder="生徒ID・氏名で検索"
           @keyup.enter="fetchData"
         />
         <Select
+          v-if="isSuperAdmin"
           v-model="filters.grade"
           :options="gradeOptions"
           placeholder="学年で絞り込み"
           @change="onGradeChange"
         />
         <Select
+          v-if="isSuperAdmin"
           v-model="filters.class_type"
           :options="classTypeOptions"
           placeholder="クラスで絞り込み"
@@ -122,18 +124,24 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useAdminStore } from '../../../stores/admin';
+import { useAuthStore } from '../../../stores/auth';
 import Button from '../../../components/Button.vue';
 import Input from '../../../components/Input.vue';
 import Select from '../../../components/Select.vue';
 import Modal from '../../../components/Modal.vue';
 
 const adminStore = useAdminStore();
+const authStore = useAuthStore();
 
 const students = ref([]);
 const classes = ref([]);
 const loading = ref(false);
 const showDeleteModal = ref(false);
 const deleteTarget = ref(null);
+
+const isSuperAdmin = computed(() => {
+  return authStore.user?.is_super_admin ?? false;
+});
 
 const filters = reactive({
   search: '',

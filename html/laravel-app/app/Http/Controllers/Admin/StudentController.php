@@ -7,6 +7,7 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
@@ -15,7 +16,13 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
+        $admin = Auth::guard('admin')->user();
         $query = Student::with('classModel');
+
+        // 担任の場合は自分のクラスの生徒のみに制限
+        if (!$admin->is_super_admin) {
+            $query->where('class_id', $admin->class_id);
+        }
 
         // 検索
         if ($request->has('search')) {
@@ -52,7 +59,15 @@ class StudentController extends Controller
      */
     public function store(StoreStudentRequest $request)
     {
-        $student = Student::create($request->validated());
+        $admin = Auth::guard('admin')->user();
+        
+        // 担任の場合は自分のクラスにのみ登録可能
+        $data = $request->validated();
+        if (!$admin->is_super_admin) {
+            $data['class_id'] = $admin->class_id;
+        }
+        
+        $student = Student::create($data);
         $student->load('classModel');
 
         return response()->json([
@@ -66,8 +81,15 @@ class StudentController extends Controller
      */
     public function show($id)
     {
-        $student = Student::with(['classModel', 'parents', 'absences'])
-                         ->findOrFail($id);
+        $admin = Auth::guard('admin')->user();
+        $query = Student::with(['classModel', 'parents', 'absences']);
+        
+        // 担任の場合は自分のクラスの生徒のみアクセス可能
+        if (!$admin->is_super_admin) {
+            $query->where('class_id', $admin->class_id);
+        }
+        
+        $student = $query->findOrFail($id);
 
         return response()->json($student);
     }
@@ -77,8 +99,23 @@ class StudentController extends Controller
      */
     public function update(UpdateStudentRequest $request, $id)
     {
-        $student = Student::findOrFail($id);
-        $student->update($request->validated());
+        $admin = Auth::guard('admin')->user();
+        $query = Student::query();
+        
+        // 担任の場合は自分のクラスの生徒のみ更新可能
+        if (!$admin->is_super_admin) {
+            $query->where('class_id', $admin->class_id);
+        }
+        
+        $student = $query->findOrFail($id);
+        
+        $data = $request->validated();
+        // 担任の場合はクラス変更を防ぐ
+        if (!$admin->is_super_admin) {
+            $data['class_id'] = $admin->class_id;
+        }
+        
+        $student->update($data);
         $student->load('classModel');
 
         return response()->json([
@@ -92,7 +129,15 @@ class StudentController extends Controller
      */
     public function destroy($id)
     {
-        $student = Student::findOrFail($id);
+        $admin = Auth::guard('admin')->user();
+        $query = Student::query();
+        
+        // 担任の場合は自分のクラスの生徒のみ削除可能
+        if (!$admin->is_super_admin) {
+            $query->where('class_id', $admin->class_id);
+        }
+        
+        $student = $query->findOrFail($id);
         
         // 保護者や欠席連絡は外部キー制約でカスケード削除される
         $student->delete();

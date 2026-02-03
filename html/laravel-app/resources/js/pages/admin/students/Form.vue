@@ -32,6 +32,7 @@
         />
         
         <Select
+          v-if="isSuperAdmin"
           id="class_id"
           v-model="form.class_id"
           label="クラス"
@@ -40,6 +41,11 @@
           required
           :error="errors.class_id"
         />
+        
+        <div v-else class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">クラス</label>
+          <p class="text-gray-900">{{ currentClassName || '読み込み中...' }}</p>
+        </div>
         
         <p v-if="errors.general" class="mb-4 text-sm text-red-600">{{ errors.general }}</p>
         
@@ -64,6 +70,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAdminStore } from '../../../stores/admin';
+import { useAuthStore } from '../../../stores/auth';
 import Input from '../../../components/Input.vue';
 import Select from '../../../components/Select.vue';
 import Button from '../../../components/Button.vue';
@@ -71,8 +78,18 @@ import Button from '../../../components/Button.vue';
 const route = useRoute();
 const router = useRouter();
 const adminStore = useAdminStore();
+const authStore = useAuthStore();
 
 const isEdit = computed(() => !!route.params.id);
+
+const isSuperAdmin = computed(() => {
+  return authStore.user?.is_super_admin ?? false;
+});
+
+const currentClassName = computed(() => {
+  if (!authStore.user) return '';
+  return authStore.user.class_name || '';
+});
 
 const form = reactive({
   seito_id: '',
@@ -100,6 +117,15 @@ const classOptions = computed(() => {
 });
 
 const fetchClasses = async () => {
+  // スーパー管理者の場合のみクラス一覧を取得
+  if (!isSuperAdmin.value) {
+    // 担任の場合は自分のクラスIDを設定
+    if (authStore.user?.class_id) {
+      form.class_id = authStore.user.class_id;
+    }
+    return;
+  }
+  
   try {
     const response = await adminStore.fetchClasses({ per_page: 100 });
     classes.value = response.data || response;

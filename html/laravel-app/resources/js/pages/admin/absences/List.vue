@@ -88,7 +88,7 @@
     <!-- 検索フィルター -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
       <h2 class="text-lg font-semibold mb-4">検索フィルター</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid gap-4" :class="isSuperAdmin ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2'">
         <Input
           v-model="filters.date_from"
           type="date"
@@ -102,6 +102,7 @@
           placeholder="終了日"
         />
         <Select
+          v-if="isSuperAdmin"
           v-model="filters.class_name"
           :options="classNameOptions"
           placeholder="クラスで絞り込み"
@@ -114,6 +115,7 @@
           label="区分"
         />
         <Select
+          v-if="isSuperAdmin"
           v-model="filters.grade"
           :options="gradeOptions"
           placeholder="学年で絞り込み"
@@ -232,9 +234,12 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
 import axios from 'axios';
+import { useAuthStore } from '../../../stores/auth';
 import Button from '../../../components/Button.vue';
 import Input from '../../../components/Input.vue';
 import Select from '../../../components/Select.vue';
+
+const authStore = useAuthStore();
 
 const absences = ref([]);
 const stats = ref({
@@ -246,6 +251,10 @@ const stats = ref({
 const monthlyStats = ref([]);
 const showOlderMonths = ref(false);
 const loading = ref(false);
+
+const isSuperAdmin = computed(() => {
+  return authStore.user?.is_super_admin ?? false;
+});
 
 const filters = reactive({
   date_from: '',

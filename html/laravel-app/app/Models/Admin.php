@@ -13,6 +13,8 @@ class Admin extends Authenticatable
         'name',
         'email',
         'password',
+        'class_id',
+        'is_super_admin',
     ];
 
     protected $hidden = [
@@ -23,6 +25,23 @@ class Admin extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'is_super_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * クラスとのリレーション
+     */
+    public function classModel()
+    {
+        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
+    }
+
+    /**
+     * スーパー管理者かどうか
+     */
+    public function isSuperAdmin()
+    {
+        return $this->is_super_admin;
     }
 }

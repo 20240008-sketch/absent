@@ -14,6 +14,7 @@
               ダッシュボード
             </router-link>
             <router-link
+              v-if="isSuperAdmin"
               to="/admin/classes"
               class="px-3 py-2 text-sm font-medium rounded hover:bg-gray-100 whitespace-nowrap"
               :class="isActive('/admin/classes') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'"
@@ -28,6 +29,7 @@
               生徒管理
             </router-link>
             <router-link
+              v-if="isSuperAdmin"
               to="/admin/parents"
               class="px-3 py-2 text-sm font-medium rounded hover:bg-gray-100 whitespace-nowrap"
               :class="isActive('/admin/parents') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'"
@@ -42,6 +44,7 @@
               欠席記録
             </router-link>
             <router-link
+              v-if="isSuperAdmin"
               to="/admin/import"
               class="px-3 py-2 text-sm font-medium rounded hover:bg-gray-100 whitespace-nowrap"
               :class="isActive('/admin/import') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'"
@@ -86,10 +89,16 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { useAuthStore } from '../stores/auth';
 import Header from '../components/Header.vue';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+
+const isSuperAdmin = computed(() => {
+  return authStore.user?.is_super_admin ?? false;
+});
 
 const isActive = (path) => {
   return route.path.startsWith(path);

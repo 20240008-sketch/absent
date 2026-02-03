@@ -19,27 +19,28 @@ class AdminLoginController extends Controller
     }
 
     /**
-     * ログイン処理（パスワード認証のみ - 2FAなし）
+     * ログイン処理（メールアドレスとパスワード認証）
      */
     public function login(Request $request)
     {
         $request->validate([
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // 固定の管理者アカウントを取得（最初の管理者）
-        $admin = Admin::first();
+        // メールアドレスで管理者を検索
+        $admin = Admin::with('classModel')->where('email', $request->email)->first();
 
         if (!$admin) {
             return response()->json([
-                'message' => '管理者アカウントが存在しません'
+                'message' => 'メールアドレスまたはパスワードが正しくありません'
             ], 401);
         }
 
         // パスワードチェック
         if (!Hash::check($request->password, $admin->password)) {
             return response()->json([
-                'message' => 'パスワードが正しくありません'
+                'message' => 'メールアドレスまたはパスワードが正しくありません'
             ], 401);
         }
 
@@ -47,12 +48,21 @@ class AdminLoginController extends Controller
         Auth::guard('admin')->login($admin);
         $request->session()->regenerate();
 
+        // クラス情報を取得
+        $className = null;
+        if ($admin->class_id && $admin->classModel) {
+            $className = $admin->classModel->class_name;
+        }
+
         return response()->json([
             'message' => 'ログインに成功しました',
             'admin' => [
                 'id' => $admin->id,
                 'name' => $admin->name,
                 'email' => $admin->email,
+                'class_id' => $admin->class_id,
+                'class_name' => $className,
+                'is_super_admin' => $admin->is_super_admin,
             ],
         ]);
     }

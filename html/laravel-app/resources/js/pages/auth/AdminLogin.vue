@@ -4,6 +4,16 @@
     
     <form @submit.prevent="handleSubmit">
       <Input
+        id="email"
+        v-model="form.email"
+        type="text"
+        label="メールアドレス"
+        placeholder="メールアドレスを入力してください"
+        required
+        :error="errors.email"
+      />
+      
+      <Input
         id="password"
         v-model="form.password"
         type="password"
@@ -38,10 +48,12 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const form = reactive({
+  email: '',
   password: ''
 });
 
 const errors = reactive({
+  email: '',
   password: '',
   general: ''
 });
@@ -49,6 +61,7 @@ const errors = reactive({
 const loading = ref(false);
 
 const handleSubmit = async () => {
+  errors.email = '';
   errors.password = '';
   errors.general = '';
   loading.value = true;
