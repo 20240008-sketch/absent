@@ -4,9 +4,14 @@
     
     <!-- 統計情報カード -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-lg shadow p-4">
+      <div 
+        @click="filterByToday"
+        class="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-lg transition-shadow"
+        :class="{ 'ring-2 ring-red-500': isFilteredByToday }"
+      >
         <h3 class="text-sm font-semibold text-gray-600 mb-1">本日の欠席</h3>
         <p class="text-2xl font-bold text-red-600">{{ stats.today }}人</p>
+        <p v-if="isFilteredByToday" class="text-xs text-red-500 mt-1">📌 フィルター中</p>
       </div>
       <div class="bg-white rounded-lg shadow p-4">
         <h3 class="text-sm font-semibold text-gray-600 mb-1">今週の欠席</h3>
@@ -25,9 +30,11 @@
     <!-- 月別欠席者数グラフ -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
       <h2 class="text-xl font-semibold mb-4">月別欠席者数</h2>
-      <div class="space-y-2">
-        <div v-for="(item, index) in monthlyStats" :key="index" class="flex items-center">
-          <div class="w-24 text-sm text-gray-600">{{ item.month }}</div>
+      
+      <!-- 直近3ヶ月（常に表示） -->
+      <div class="space-y-2 mb-4">
+        <div v-for="(item, index) in recentMonths" :key="index" class="flex items-center">
+          <div class="w-24 text-sm text-gray-600 font-semibold">{{ item.month }}</div>
           <div class="flex-1">
             <div class="h-8 bg-gray-200 rounded overflow-hidden">
               <div 
@@ -35,6 +42,42 @@
                 :style="{ width: getBarWidth(item.count) }"
               >
                 <span v-if="item.count > 0">{{ item.count }}人</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 過去のデータ（開閉可能） -->
+      <div v-if="olderMonths.length > 0">
+        <button
+          @click="showOlderMonths = !showOlderMonths"
+          class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 mb-2"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="h-4 w-4 transition-transform"
+            :class="{ 'rotate-180': showOlderMonths }"
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+          <span>{{ showOlderMonths ? '過去のデータを閉じる' : '過去のデータを開く' }}</span>
+        </button>
+        
+        <div v-show="showOlderMonths" class="space-y-2 pl-4 border-l-2 border-gray-300">
+          <div v-for="(item, index) in olderMonths" :key="index" class="flex items-center">
+            <div class="w-24 text-sm text-gray-500">{{ item.month }}</div>
+            <div class="flex-1">
+              <div class="h-8 bg-gray-200 rounded overflow-hidden">
+                <div 
+                  class="h-full bg-gray-400 flex items-center justify-end pr-2 text-white text-sm font-semibold"
+                  :style="{ width: getBarWidth(item.count) }"
+                >
+                  <span v-if="item.count > 0">{{ item.count }}人</span>
+                </div>
               </div>
             </div>
           </div>
@@ -74,8 +117,9 @@
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">
-          欠席一覧
-          <span v-if="filters.date" class="text-sm text-gray-600 ml-2">
+          <span v-if="isFilteredByToday" class="text-red-600">📌 本日の欠席</span>
+          <span v-else>欠席一覧</span>
+          <span v-if="filters.date && !isFilteredByToday" class="text-sm text-gray-600 ml-2">
             ({{ filters.date }})
           </span>
         </h2>
@@ -103,24 +147,33 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">予定時刻</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="item in absences" :key="item.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ formatDate(item.absence_date) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getGrade(item.student?.class_model?.class_name) }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.student?.class_model?.class_name || '-' }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.student?.seito_number || '-' }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ item.student?.seito_name || '-' }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <span 
-                  class="px-2 py-1 rounded text-xs font-semibold"
-                  :class="getDivisionClass(item.division)"
-                >
-                  {{ item.division }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-sm">{{ item.reason }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.scheduled_time || '-' }}</td>
-            </tr>
+          <tbody class="bg-white">
+            <template v-for="(item, index) in absences" :key="item.id">
+              <!-- 日付が変わる場合は区切り線を表示 -->
+              <tr v-if="index > 0 && item.absence_date !== absences[index - 1].absence_date">
+                <td colspan="8" class="px-0 py-0">
+                  <div class="border-t-4 border-green-200"></div>
+                </td>
+              </tr>
+              <!-- データ行 -->
+              <tr class="hover:bg-gray-50 border-b border-gray-200">
+                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ formatDate(item.absence_date) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getGrade(item.student?.class_model?.class_name) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.student?.class_model?.class_name || '-' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.student?.seito_number || '-' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ item.student?.seito_name || '-' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <span 
+                    class="px-2 py-1 rounded text-xs font-semibold"
+                    :class="getDivisionClass(item.division)"
+                  >
+                    {{ item.division }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">{{ item.reason }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ item.scheduled_time || '-' }}</td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -170,6 +223,7 @@ const stats = ref({
   total: 0
 });
 const monthlyStats = ref([]);
+const showOlderMonths = ref(false);
 const loading = ref(false);
 
 const filters = reactive({
@@ -184,6 +238,23 @@ const pagination = reactive({
   from: 0,
   to: 0,
   total: 0
+});
+
+// 直近3ヶ月のデータ
+const recentMonths = computed(() => {
+  return monthlyStats.value.slice(0, 3);
+});
+
+// 3ヶ月より前のデータ
+const olderMonths = computed(() => {
+  return monthlyStats.value.slice(3);
+});
+
+// 本日の欠席でフィルター中かどうか
+const isFilteredByToday = computed(() => {
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return filters.date === todayStr;
 });
 
 const divisionOptions = [
@@ -284,6 +355,22 @@ const resetFilters = () => {
   filters.division = '';
   filters.grade = '';
   fetchAbsences();
+};
+
+const filterByToday = () => {
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  // 既に本日でフィルター中なら解除
+  if (filters.date === todayStr) {
+    resetFilters();
+  } else {
+    // 本日の日付でフィルター
+    filters.date = todayStr;
+    filters.division = '欠席'; // 欠席のみ
+    filters.grade = '';
+    fetchAbsences();
+  }
 };
 
 const changePage = (page) => {

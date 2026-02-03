@@ -104,8 +104,8 @@ class AbsenceController extends Controller
         $currentYear = Carbon::now()->year;
         $monthlyData = [];
 
-        // 過去6ヶ月分のデータを取得
-        for ($i = 5; $i >= 0; $i--) {
+        // 過去6ヶ月分のデータを取得（新しい月から古い月へ）
+        for ($i = 0; $i <= 5; $i++) {
             $date = Carbon::now()->subMonths($i);
             $count = Absence::whereYear('absence_date', $date->year)
                            ->whereMonth('absence_date', $date->month)
