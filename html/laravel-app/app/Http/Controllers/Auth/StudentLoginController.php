@@ -21,7 +21,7 @@ class StudentLoginController extends Controller
     }
 
     /**
-     * 生徒ログイン（2FA前）
+     * 生徒ログイン（2FA不要）
      * 生徒のメールアドレス（Classroom）を使用して、対応する保護者情報を取得
      */
     public function login(Request $request)
@@ -51,19 +51,29 @@ class StudentLoginController extends Controller
             ]);
         }
 
-        // TODO: 実際のClassroomパスワード検証をここに実装
-        // 現時点では、保護者のメールアドレスに2FAコードを送信
+        // 保護者のパスワードで認証
+        if (!Hash::check($credentials['password'], $parent->parent_password)) {
+            throw ValidationException::withMessages([
+                'email' => ['メールアドレスまたはパスワードが正しくありません。'],
+            ]);
+        }
+
+        // 直接ログイン
+        Auth::guard('parent')->login($parent);
+        $request->session()->regenerate();
 
         // 初回パスワード変更が必要かチェック
         $needsPasswordChange = $parent->parent_initial_password !== null;
 
-        // 2FAコード生成・送信（保護者のメールアドレスに送信）
-        $this->twoFactorService->createAndSend($parent->parent_email, 'parent', $parent->parent_name);
-
         return response()->json([
-            'message' => '認証コードを保護者のメールアドレスに送信しました。',
+            'message' => 'ログインしました。',
             'needs_password_change' => $needsPasswordChange,
-            'parent_email' => $parent->parent_email, // 確認用（部分的にマスク）
+            'parent' => [
+                'id' => $parent->id,
+                'name' => $parent->parent_name,
+                'email' => $parent->parent_email,
+                'seito_id' => $parent->seito_id,
+            ],
         ]);
     }
 

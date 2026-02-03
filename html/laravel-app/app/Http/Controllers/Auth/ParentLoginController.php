@@ -20,7 +20,7 @@ class ParentLoginController extends Controller
     }
 
     /**
-     * 保護者ログイン（2FA前）
+     * 保護者ログイン（2FA不要）
      */
     public function login(Request $request)
     {
@@ -37,15 +37,22 @@ class ParentLoginController extends Controller
             ]);
         }
 
+        // 直接ログイン
+        Auth::guard('parent')->login($parent);
+        $request->session()->regenerate();
+
         // 初回パスワード変更が必要かチェック
         $needsPasswordChange = $parent->parent_initial_password !== null;
 
-        // 2FAコード生成・送信
-        $this->twoFactorService->createAndSend($credentials['email'], 'parent', $parent->parent_name);
-
         return response()->json([
-            'message' => '認証コードを送信しました。',
+            'message' => 'ログインしました。',
             'needs_password_change' => $needsPasswordChange,
+            'parent' => [
+                'id' => $parent->id,
+                'name' => $parent->parent_name,
+                'email' => $parent->parent_email,
+                'seito_id' => $parent->seito_id,
+            ],
         ]);
     }
 
@@ -129,6 +136,7 @@ class ParentLoginController extends Controller
             'new_password' => 'required|string|min:8|confirmed',
         ]);
 
+        /** @var \App\Models\ParentModel $parent */
         $parent = Auth::guard('parent')->user();
 
         // 現在のパスワードが正しいか確認
@@ -139,9 +147,10 @@ class ParentLoginController extends Controller
         }
 
         // 新しいパスワードを設定し、初期パスワードをクリア
-        $parent->parent_password = Hash::make($request->new_password);
-        $parent->parent_initial_password = null;
-        $parent->save();
+        ParentModel::where('id', $parent->id)->update([
+            'parent_password' => Hash::make($request->new_password),
+            'parent_initial_password' => null,
+        ]);
 
         return response()->json(['message' => 'パスワードを変更しました。']);
     }

@@ -65,10 +65,22 @@ const handleSubmit = async () => {
   errors.general = '';
   loading.value = true;
   
+  console.log('Login attempt with:', { email: form.email });
+  
   try {
-    await authStore.parentLogin(form);
-    router.push({ name: 'parent.verify2fa' });
+    const response = await authStore.parentLogin(form);
+    console.log('Login response:', response);
+    
+    // 2FA不要、直接ダッシュボードへ
+    if (response.needs_password_change) {
+      router.push({ name: 'parent.changePassword' });
+    } else {
+      router.push({ name: 'parent.dashboard' });
+    }
   } catch (error) {
+    console.error('Login error:', error);
+    console.error('Error response:', error.response?.data);
+    
     if (error.response?.data?.errors) {
       Object.assign(errors, error.response.data.errors);
     } else {

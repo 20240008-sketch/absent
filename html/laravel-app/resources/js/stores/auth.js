@@ -33,30 +33,38 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // 保護者ログイン
+    // 保護者ログイン（2FA不要）
     async parentLogin(credentials) {
       try {
         const response = await axios.post('/api/parent/login', credentials);
-        this.needs2FA = true;
-        this.email = credentials.email;
+        
+        // 直接ログイン成功
+        this.user = response.data.parent;
+        this.isAuthenticated = true;
         this.guard = 'parent';
         this.loginType = 'parent';
+        this.needs2FA = false;
         this.needsPasswordChange = response.data.needs_password_change || false;
+        
         return response.data;
       } catch (error) {
         throw error;
       }
     },
 
-    // 生徒ログイン
+    // 生徒ログイン（2FA不要）
     async studentLogin(credentials) {
       try {
         const response = await axios.post('/api/student/login', credentials);
-        this.needs2FA = true;
-        this.email = credentials.email;
+        
+        // 直接ログイン成功
+        this.user = response.data.parent;
+        this.isAuthenticated = true;
         this.guard = 'parent'; // 生徒も保護者ガードを使用
         this.loginType = 'student';
+        this.needs2FA = false;
         this.needsPasswordChange = response.data.needs_password_change || false;
+        
         return response.data;
       } catch (error) {
         throw error;

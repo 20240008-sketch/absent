@@ -66,9 +66,15 @@ const handleSubmit = async () => {
   loading.value = true;
   
   try {
-    // 生徒ログイン処理
-    await authStore.studentLogin(form);
-    router.push({ name: 'parent.verify2fa' });
+    // 生徒ログイン処理（2FA不要）
+    const response = await authStore.studentLogin(form);
+    
+    // 直接ダッシュボードへ
+    if (response.needs_password_change) {
+      router.push({ name: 'parent.changePassword' });
+    } else {
+      router.push({ name: 'parent.dashboard' });
+    }
   } catch (error) {
     if (error.response?.data?.errors) {
       Object.assign(errors, error.response.data.errors);
