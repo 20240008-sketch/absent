@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use App\Models\ClassModel;
+use App\Models\Admin;
 
 class ClassSeeder extends Seeder
 {
@@ -48,6 +50,20 @@ class ClassSeeder extends Seeder
 
         foreach ($classes as $class) {
             ClassModel::create($class);
+            
+            // 各クラスの担任管理者アカウントを作成
+            Admin::updateOrCreate(
+                ['email' => $class['teacher_email']],
+                [
+                    'name' => $class['teacher_name'],
+                    'email' => $class['teacher_email'],
+                    'password' => Hash::make('seiei2026'),
+                    'class_id' => $class['class_id'],
+                    'is_super_admin' => false,
+                ]
+            );
         }
+        
+        $this->command->info('クラスと担任アカウントを ' . count($classes) . ' 件作成しました。');
     }
 }

@@ -18,7 +18,7 @@
           id="absence_date"
           v-model="form.absence_date"
           type="date"
-          label="欠席日"
+          :label="getDateLabel()"
           required
           :error="errors.absence_date"
         />
@@ -112,6 +112,17 @@ const divisionOptions = [
   { value: '遅刻', label: '遅刻' },
   { value: '早退', label: '早退' }
 ];
+
+// 区分に応じて日付のラベルを変更
+const getDateLabel = () => {
+  if (form.division === '遅刻') {
+    return '遅刻日';
+  } else if (form.division === '早退') {
+    return '早退日';
+  } else {
+    return '欠席日';
+  }
+};
 
 // 区分が変更されたら登校予定時刻をクリア
 watch(() => form.division, (newValue) => {
