@@ -126,11 +126,19 @@
             <li>• name (管理者名)</li>
             <li>• email (メールアドレス)</li>
             <li>• password (パスワード)</li>
+            <li>• class_id (担当クラスID - 担任の場合)</li>
+            <li>• is_super_admin (スーパー管理者: true/false)</li>
           </ul>
+          <div class="mt-2 p-2 bg-blue-50 rounded">
+            <p class="text-xs text-blue-800 font-medium mb-1">📌 よく使うアカウント:</p>
+            <p class="text-xs text-blue-700">• スーパー管理者: seiei2026 / 0000</p>
+            <p class="text-xs text-blue-700">• 担任: teacher1tokushin@seiei.ac.jp / seiei2026</p>
+            <p class="text-xs text-blue-700">• 担任: teacher2shingaku@seiei.ac.jp / seiei2026</p>
+          </div>
           <a
             href="/templates/admins_template.csv"
             download
-            class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-3"
+            class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-3 mt-3"
           >
             📥 テンプレートダウンロード
           </a>
@@ -294,9 +302,13 @@
         
         <div>
           <h3 class="font-medium mb-2">管理者データCSV</h3>
-          <pre class="text-xs bg-gray-100 p-3 rounded overflow-x-auto">name,email,password
-スーパー管理者,seiei2026,seiei2026
-副管理者,admin2@example.com,seiei2026</pre>
+          <pre class="text-xs bg-gray-100 p-3 rounded overflow-x-auto">name,email,password,class_id,is_super_admin
+スーパー管理者,seiei2026,0000,,true
+田中太郎,teacher1tokushin@seiei.ac.jp,seiei2026,1TOKUSHIN,false
+佐藤花子,teacher2shingaku@seiei.ac.jp,seiei2026,2SHINGAKU,false</pre>
+          <p class="text-xs text-gray-600 mt-2">
+            ※ 担任はclass_idを指定し、is_super_admin=false
+          </p>
         </div>
         
         <div>
