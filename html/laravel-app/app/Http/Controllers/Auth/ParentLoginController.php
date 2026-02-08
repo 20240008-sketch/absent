@@ -31,7 +31,18 @@ class ParentLoginController extends Controller
 
         $parent = ParentModel::where('parent_email', $credentials['email'])->first();
 
-        if (!$parent || !Hash::check($credentials['password'], $parent->parent_password)) {
+        if (!$parent) {
+            throw ValidationException::withMessages([
+                'email' => ['メールアドレスまたはパスワードが正しくありません。'],
+            ]);
+        }
+
+        // 通常のパスワードまたは初期パスワードでログイン可能
+        $passwordValid = Hash::check($credentials['password'], $parent->parent_password);
+        $initialPasswordValid = $parent->parent_initial_password && 
+                               Hash::check($credentials['password'], $parent->parent_initial_password);
+
+        if (!$passwordValid && !$initialPasswordValid) {
             throw ValidationException::withMessages([
                 'email' => ['メールアドレスまたはパスワードが正しくありません。'],
             ]);
@@ -41,11 +52,13 @@ class ParentLoginController extends Controller
         Auth::guard('parent')->login($parent);
         $request->session()->regenerate();
 
-        // 初回パスワード変更が必要かチェック
+        // 初回パスワード変更が必要かチェック（初期パスワードでログインした場合も含む）
         $needsPasswordChange = $parent->parent_initial_password !== null;
 
         return response()->json([
-            'message' => 'ログインしました。',
+            'message' => $needsPasswordChange ? 
+                'ログインしました。セキュリティのため、パスワードを変更してください。' : 
+                'ログインしました。',
             'needs_password_change' => $needsPasswordChange,
             'parent' => [
                 'id' => $parent->id,
@@ -139,10 +152,14 @@ class ParentLoginController extends Controller
         /** @var \App\Models\ParentModel $parent */
         $parent = Auth::guard('parent')->user();
 
-        // 現在のパスワードが正しいか確認
-        if (!Hash::check($request->current_password, $parent->parent_password)) {
+        // 現在のパスワードまたは初期パスワードが正しいか確認
+        $currentPasswordValid = Hash::check($request->current_password, $parent->parent_password);
+        $initialPasswordValid = $parent->parent_initial_password && 
+                               Hash::check($request->current_password, $parent->parent_initial_password);
+
+        if (!$currentPasswordValid && !$initialPasswordValid) {
             throw ValidationException::withMessages([
-                'current_password' => ['現在のパスワードが正しくありません。'],
+                'current_password' => ['現在のパスワードまたは初期パスワードが正しくありません。'],
             ]);
         }
 

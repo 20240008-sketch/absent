@@ -22,6 +22,14 @@
         :error="errors.password"
       />
       
+      <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+        <p class="text-xs text-blue-800">
+          💡 <strong>パスワードを忘れた場合</strong><br>
+          学校から配布された「初期パスワード」でログインできます。<br>
+          ログイン後、新しいパスワードに変更してください。
+        </p>
+      </div>
+      
       <p v-if="errors.general" class="mb-4 text-sm text-red-600">{{ errors.general }}</p>
       
       <Button

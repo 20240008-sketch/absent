@@ -3,12 +3,19 @@
     <h1 class="text-3xl font-bold mb-6">パスワード変更</h1>
     
     <div class="bg-white rounded-lg shadow p-6 max-w-md">
+      <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p class="text-sm text-yellow-800">
+          ⚠️ <strong>セキュリティのため、パスワードを変更してください</strong><br>
+          初期パスワードでログインした場合、新しいパスワードの設定が必要です。
+        </p>
+      </div>
+      
       <form @submit.prevent="handleSubmit">
         <Input
           id="current_password"
           v-model="form.current_password"
           type="password"
-          label="現在のパスワード"
+          label="現在のパスワード（または初期パスワード）"
           required
           :error="errors.current_password"
         />
@@ -17,7 +24,7 @@
           id="new_password"
           v-model="form.new_password"
           type="password"
-          label="新しいパスワード"
+          label="新しいパスワード（8文字以上）"
           required
           :error="errors.new_password"
         />
