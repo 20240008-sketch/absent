@@ -13,14 +13,36 @@
         :error="errors.email"
       />
       
-      <Input
-        id="password"
-        v-model="form.password"
-        type="password"
-        label="パスワード"
-        required
-        :error="errors.password"
-      />
+      <div class="mb-4">
+        <Input
+          id="password"
+          v-model="form.password"
+          type="password"
+          label="パスワード"
+          required
+          :error="errors.password"
+        />
+        <div class="mt-2 flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            @click="savePassword"
+            class="flex-1"
+          >
+            💾 パスワードを保存
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            @click="resetPassword"
+            class="flex-1"
+          >
+            🔄 パスワードをリセット
+          </Button>
+        </div>
+      </div>
       
       <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
         <p class="text-xs text-blue-800">
@@ -31,6 +53,7 @@
       </div>
       
       <p v-if="errors.general" class="mb-4 text-sm text-red-600">{{ errors.general }}</p>
+      <p v-if="successMessage" class="mb-4 text-sm text-green-600">{{ successMessage }}</p>
       
       <Button
         type="submit"
@@ -66,6 +89,49 @@ const errors = reactive({
 });
 
 const loading = ref(false);
+const successMessage = ref('');
+
+const savePassword = () => {
+  if (!form.email || !form.password) {
+    errors.general = 'メールアドレスとパスワードを入力してください';
+    return;
+  }
+  
+  // ブラウザのローカルストレージに保存
+  localStorage.setItem('saved_parent_email', form.email);
+  localStorage.setItem('saved_parent_password', form.password);
+  
+  successMessage.value = 'パスワードを保存しました';
+  setTimeout(() => {
+    successMessage.value = '';
+  }, 3000);
+};
+
+const resetPassword = () => {
+  form.email = '';
+  form.password = '';
+  
+  // ローカルストレージから削除
+  localStorage.removeItem('saved_parent_email');
+  localStorage.removeItem('saved_parent_password');
+  
+  successMessage.value = 'パスワードをリセットしました';
+  setTimeout(() => {
+    successMessage.value = '';
+  }, 3000);
+};
+
+// ページ読み込み時に保存されたパスワードを復元
+const loadSavedCredentials = () => {
+  const savedEmail = localStorage.getItem('saved_parent_email');
+  const savedPassword = localStorage.getItem('saved_parent_password');
+  
+  if (savedEmail) form.email = savedEmail;
+  if (savedPassword) form.password = savedPassword;
+};
+
+// コンポーネントマウント時に実行
+loadSavedCredentials();
 
 const handleSubmit = async () => {
   errors.email = '';

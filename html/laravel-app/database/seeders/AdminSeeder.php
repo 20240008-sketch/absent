@@ -24,7 +24,7 @@ class AdminSeeder extends Seeder
 
         Admin::create([
             'name' => '管理者',
-            'email' => 'admin@example.com',
+            'email' => 'admin@seiei.ac.jp',
             'password' => Hash::make('seiei2026'),
             'class_id' => null,
             'is_super_admin' => true,
