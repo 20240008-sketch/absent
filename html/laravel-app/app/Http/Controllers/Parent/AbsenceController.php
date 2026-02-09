@@ -20,6 +20,7 @@ class AbsenceController extends Controller
         $parent = Auth::guard('parent')->user();
         
         $query = Absence::where('seito_id', $parent->seito_id)
+            ->where('is_deleted', false) // 削除されていないもののみ
             ->with('student');
 
         // 検索条件
@@ -120,7 +121,7 @@ class AbsenceController extends Controller
     }
 
     /**
-     * 欠席連絡削除
+     * 欠席連絡削除（論理削除）
      */
     public function destroy(string $id)
     {
@@ -135,7 +136,11 @@ class AbsenceController extends Controller
             ], 403);
         }
 
-        $absence->delete();
+        // 論理削除: is_deletedフラグをtrueに設定
+        $absence->update([
+            'is_deleted' => true,
+            'deleted_at' => now(),
+        ]);
 
         return response()->json([
             'message' => '欠席連絡を削除しました。',

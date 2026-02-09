@@ -15,12 +15,16 @@ class Absence extends Model
         'reason',
         'scheduled_time',
         'absence_date',
+        'is_deleted',
+        'deleted_at',
     ];
 
     protected function casts(): array
     {
         return [
             'absence_date' => 'date',
+            'is_deleted' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
     }
 
