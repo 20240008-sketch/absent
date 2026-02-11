@@ -52,14 +52,8 @@ class ParentLoginController extends Controller
         Auth::guard('parent')->login($parent);
         $request->session()->regenerate();
 
-        // 初回パスワード変更が必要かチェック（初期パスワードでログインした場合も含む）
-        $needsPasswordChange = $parent->parent_initial_password !== null;
-
         return response()->json([
-            'message' => $needsPasswordChange ? 
-                'ログインしました。セキュリティのため、パスワードを変更してください。' : 
-                'ログインしました。',
-            'needs_password_change' => $needsPasswordChange,
+            'message' => 'ログインしました。',
             'parent' => [
                 'id' => $parent->id,
                 'name' => $parent->parent_name,
