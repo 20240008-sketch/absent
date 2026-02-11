@@ -19,8 +19,12 @@ class DashboardController extends Controller
     {
         $admin = Auth::guard('admin')->user();
         
+        if (!$admin) {
+            return response()->json(['error' => '認証エラー'], 401);
+        }
+        
         // スーパー管理者の場合は全体の統計
-        if ($admin && $admin->is_super_admin) {
+        if ($admin->is_super_admin) {
             // クラス数
             $classCount = ClassModel::count();
             
@@ -31,51 +35,75 @@ class DashboardController extends Controller
             $parentCount = ParentModel::count();
             
             // 本日の欠席数
-            $todayAbsences = Absence::whereDate('absence_date', Carbon::today())
+            $todayAbsences = Absence::where('is_deleted', false)
+                                   ->whereDate('absence_date', Carbon::today())
                                    ->where('division', '欠席')
                                    ->count();
             
             // 本日の遅刻数
-            $todayLate = Absence::whereDate('absence_date', Carbon::today())
+            $todayLate = Absence::where('is_deleted', false)
+                               ->whereDate('absence_date', Carbon::today())
                                ->where('division', '遅刻')
                                ->count();
         } else {
             // 担任の場合は自分のクラスのみ
+            if (!$admin->class_id) {
+                // クラスが割り当てられていない場合
+                return response()->json([
+                    'class_count' => 0,
+                    'student_count' => 0,
+                    'parent_count' => 0,
+                    'today_absences' => 0,
+                    'today_late' => 0,
+                    'is_super_admin' => false,
+                    'class_name' => null,
+                    'warning' => 'クラスが割り当てられていません',
+                ]);
+            }
+            
             $classCount = 1; // 自分のクラスのみ
             
+            // 自分のクラスの生徒IDリストを取得
+            $studentIds = Student::where('class_id', $admin->class_id)
+                                ->pluck('seito_id')
+                                ->toArray();
+            
             // 自分のクラスの生徒数
-            $studentCount = Student::where('class_id', $admin->class_id)->count();
+            $studentCount = count($studentIds);
             
             // 自分のクラスの生徒の保護者数
-            $parentCount = ParentModel::whereIn('seito_id', function($query) use ($admin) {
-                $query->select('seito_id')
-                      ->from('students')
-                      ->where('class_id', $admin->class_id);
-            })->count();
+            $parentCount = 0;
+            if (!empty($studentIds)) {
+                $parentCount = ParentModel::whereIn('seito_id', $studentIds)->count();
+            }
             
             // 本日の自分のクラスの欠席数
-            $todayAbsences = Absence::whereDate('absence_date', Carbon::today())
-                                   ->where('division', '欠席')
-                                   ->whereHas('student', function($q) use ($admin) {
-                                       $q->where('class_id', $admin->class_id);
-                                   })
-                                   ->count();
+            $todayAbsences = 0;
+            if (!empty($studentIds)) {
+                $todayAbsences = Absence::where('is_deleted', false)
+                                       ->whereDate('absence_date', Carbon::today())
+                                       ->where('division', '欠席')
+                                       ->whereIn('seito_id', $studentIds)
+                                       ->count();
+            }
             
             // 本日の自分のクラスの遅刻数
-            $todayLate = Absence::whereDate('absence_date', Carbon::today())
-                               ->where('division', '遅刻')
-                               ->whereHas('student', function($q) use ($admin) {
-                                   $q->where('class_id', $admin->class_id);
-                               })
-                               ->count();
+            $todayLate = 0;
+            if (!empty($studentIds)) {
+                $todayLate = Absence::where('is_deleted', false)
+                                   ->whereDate('absence_date', Carbon::today())
+                                   ->where('division', '遅刻')
+                                   ->whereIn('seito_id', $studentIds)
+                                   ->count();
+            }
         }
 
         return response()->json([
-            'class_count' => $classCount,
-            'student_count' => $studentCount,
-            'parent_count' => $parentCount,
-            'today_absences' => $todayAbsences,
-            'today_late' => $todayLate,
+            'class_count' => $classCount ?? 0,
+            'student_count' => $studentCount ?? 0,
+            'parent_count' => $parentCount ?? 0,
+            'today_absences' => $todayAbsences ?? 0,
+            'today_late' => $todayLate ?? 0,
             'is_super_admin' => $admin->is_super_admin ?? false,
             'class_name' => $admin->classModel->class_name ?? null,
         ]);

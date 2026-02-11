@@ -14,6 +14,17 @@
       <p class="text-gray-500">読み込み中...</p>
     </div>
     
+    <div v-else-if="error" class="text-center py-8">
+      <p class="text-red-600">{{ error }}</p>
+      <button @click="fetchStats" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        再読み込み
+      </button>
+    </div>
+    
+    <div v-else-if="stats && stats.warning" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+      <p class="text-yellow-800">⚠️ {{ stats.warning }}</p>
+    </div>
+    
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="bg-white rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-700 mb-2">
@@ -104,12 +115,18 @@ import { useAdminStore } from '../../stores/admin';
 const adminStore = useAdminStore();
 const stats = ref(null);
 const loading = ref(true);
+const error = ref(null);
 
 const fetchStats = async () => {
+  loading.value = true;
+  error.value = null;
+  
   try {
     stats.value = await adminStore.fetchDashboardStats();
-  } catch (error) {
-    console.error('統計データ取得エラー:', error);
+    console.log('ダッシュボード統計:', stats.value);
+  } catch (err) {
+    console.error('統計データ取得エラー:', err);
+    error.value = 'データの読み込みに失敗しました。もう一度お試しください。';
   } finally {
     loading.value = false;
   }
