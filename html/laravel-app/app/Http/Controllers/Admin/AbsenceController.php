@@ -33,8 +33,10 @@ class AbsenceController extends Controller
         $query = Absence::with(['student.classModel'])
             ->where('is_deleted', false); // 削除されていないもののみ
 
-        // 担任の場合は自分のクラスのみ表示
-        if ($admin && !$admin->is_super_admin && $admin->class_id) {
+        // 担任の場合は、show_all_classesパラメータがない限り自分のクラスのみ表示
+        $showAllClasses = $request->has('show_all_classes') && $request->show_all_classes === 'true';
+        
+        if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
             $query->whereHas('student', function ($q) use ($admin) {
                 $q->where('class_id', $admin->class_id);
             });
@@ -91,17 +93,20 @@ class AbsenceController extends Controller
     /**
      * 欠席統計情報取得
      */
-    public function stats()
+    public function stats(Request $request)
     {
         $admin = Auth::guard('admin')->user();
         
+        // show_all_classesパラメータで全クラス表示かどうかを判定
+        $showAllClasses = $request->has('show_all_classes') && $request->show_all_classes === 'true';
+        
         // 本日の欠席数
-        $todayQuery = Absence::where('is_deleted', false) // 削除されていないもののみ
+        $todayQuery = Absence::where('is_deleted', false)
                        ->whereDate('absence_date', Carbon::today())
                        ->where('division', '欠席');
         
-        // 担任の場合は自分のクラスのみ
-        if ($admin && !$admin->is_super_admin && $admin->class_id) {
+        // 担任の場合は、show_all_classesがない限り自分のクラスのみ
+        if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
             $todayQuery->whereHas('student', function ($q) use ($admin) {
                 $q->where('class_id', $admin->class_id);
             });
@@ -109,14 +114,14 @@ class AbsenceController extends Controller
         $today = $todayQuery->count();
 
         // 今週の欠席数（月曜日〜日曜日）
-        $weekQuery = Absence::where('is_deleted', false) // 削除されていないもののみ
+        $weekQuery = Absence::where('is_deleted', false)
                 ->whereBetween('absence_date', [
                     Carbon::now()->startOfWeek(),
                     Carbon::now()->endOfWeek()
                 ])
                 ->where('division', '欠席');
         
-        if ($admin && !$admin->is_super_admin && $admin->class_id) {
+        if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
             $weekQuery->whereHas('student', function ($q) use ($admin) {
                 $q->where('class_id', $admin->class_id);
             });
@@ -129,7 +134,7 @@ class AbsenceController extends Controller
                        ->whereMonth('absence_date', Carbon::now()->month)
                        ->where('division', '欠席');
         
-        if ($admin && !$admin->is_super_admin && $admin->class_id) {
+        if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
             $monthQuery->whereHas('student', function ($q) use ($admin) {
                 $q->where('class_id', $admin->class_id);
             });
@@ -140,7 +145,7 @@ class AbsenceController extends Controller
         $totalQuery = Absence::where('is_deleted', false)
                        ->where('division', '欠席');
         
-        if ($admin && !$admin->is_super_admin && $admin->class_id) {
+        if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
             $totalQuery->whereHas('student', function ($q) use ($admin) {
                 $q->where('class_id', $admin->class_id);
             });
@@ -158,11 +163,14 @@ class AbsenceController extends Controller
     /**
      * 月別欠席統計取得
      */
-    public function monthly()
+    public function monthly(Request $request)
     {
         $admin = Auth::guard('admin')->user();
         $currentYear = Carbon::now()->year;
         $monthlyData = [];
+        
+        // show_all_classesパラメータで全クラス表示かどうかを判定
+        $showAllClasses = $request->has('show_all_classes') && $request->show_all_classes === 'true';
 
         // 過去6ヶ月分のデータを取得（新しい月から古い月へ）
         for ($i = 0; $i <= 5; $i++) {
@@ -172,8 +180,8 @@ class AbsenceController extends Controller
                            ->whereMonth('absence_date', $date->month)
                            ->where('division', '欠席');
             
-            // 担任の場合は自分のクラスのみ
-            if ($admin && !$admin->is_super_admin && $admin->class_id) {
+            // 担任の場合は、show_all_classesがない限り自分のクラスのみ
+            if ($admin && !$admin->is_super_admin && $admin->class_id && !$showAllClasses) {
                 $query->whereHas('student', function ($q) use ($admin) {
                     $q->where('class_id', $admin->class_id);
                 });

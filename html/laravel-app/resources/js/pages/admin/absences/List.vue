@@ -1,6 +1,22 @@
 <template>
   <div>
-    <h1 class="text-2xl font-bold mb-6">欠席記録</h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">欠席記録</h1>
+      
+      <!-- 担任の場合のみ表示：全クラス表示切り替えボタン -->
+      <div v-if="!isSuperAdmin && hasClassId" class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">
+          {{ showAllClasses ? '全クラス表示中' : '担当クラスのみ表示中' }}
+        </span>
+        <Button
+          :variant="showAllClasses ? 'secondary' : 'primary'"
+          size="sm"
+          @click="toggleClassFilter"
+        >
+          {{ showAllClasses ? '🔒 担当クラスのみ表示' : '🔓 全クラスを表示' }}
+        </Button>
+      </div>
+    </div>
     
     <!-- 統計情報カード -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -251,9 +267,14 @@ const stats = ref({
 const monthlyStats = ref([]);
 const showOlderMonths = ref(false);
 const loading = ref(false);
+const showAllClasses = ref(false);
 
 const isSuperAdmin = computed(() => {
   return authStore.user?.is_super_admin ?? false;
+});
+
+const hasClassId = computed(() => {
+  return authStore.user?.class_id != null;
 });
 
 const filters = reactive({
@@ -364,7 +385,11 @@ const formatDate = (date) => {
 
 const fetchStats = async () => {
   try {
-    const response = await axios.get('/api/admin/absences/stats');
+    const params = {};
+    if (showAllClasses.value) {
+      params.show_all_classes = 'true';
+    }
+    const response = await axios.get('/api/admin/absences/stats', { params });
     stats.value = response.data;
   } catch (error) {
     console.error('統計データ取得エラー:', error);
@@ -373,7 +398,11 @@ const fetchStats = async () => {
 
 const fetchMonthlyStats = async () => {
   try {
-    const response = await axios.get('/api/admin/absences/monthly');
+    const params = {};
+    if (showAllClasses.value) {
+      params.show_all_classes = 'true';
+    }
+    const response = await axios.get('/api/admin/absences/monthly', { params });
     monthlyStats.value = response.data;
   } catch (error) {
     console.error('月別統計データ取得エラー:', error);
@@ -391,6 +420,11 @@ const fetchAbsences = async (page = 1) => {
       division: filters.division || undefined,
       grade: filters.grade || undefined
     };
+    
+    // 担任が全クラス表示を選択している場合
+    if (showAllClasses.value) {
+      params.show_all_classes = 'true';
+    }
     
     const response = await axios.get('/api/admin/absences', { params });
     absences.value = response.data.data || response.data;
@@ -431,6 +465,14 @@ const filterByToday = () => {
 
 const changePage = (page) => {
   fetchAbsences(page);
+};
+
+const toggleClassFilter = () => {
+  showAllClasses.value = !showAllClasses.value;
+  // データを再取得
+  fetchStats();
+  fetchMonthlyStats();
+  fetchAbsences();
 };
 
 onMounted(() => {
