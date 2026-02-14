@@ -22,7 +22,21 @@
         :error="errors.password"
       />
       
+      <!-- パスワード保存チェックボックス -->
+      <div class="mb-4 flex items-center">
+        <input
+          id="remember"
+          v-model="rememberMe"
+          type="checkbox"
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label for="remember" class="ml-2 block text-sm text-gray-700">
+          パスワードを保存する
+        </label>
+      </div>
+      
       <p v-if="errors.general" class="mb-4 text-sm text-red-600">{{ errors.general }}</p>
+      <p v-if="successMessage" class="mb-4 text-sm text-green-600">{{ successMessage }}</p>
       
       <Button
         type="submit"
@@ -37,7 +51,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import Input from '../../components/Input.vue';
@@ -58,6 +72,24 @@ const errors = reactive({
 });
 
 const loading = ref(false);
+const rememberMe = ref(false);
+const successMessage = ref('');
+
+// ローカルストレージのキー
+const STORAGE_KEY_EMAIL = 'parent_saved_email';
+const STORAGE_KEY_PASSWORD = 'parent_saved_password';
+
+// ページ読み込み時に保存された情報を復元
+onMounted(() => {
+  const savedEmail = localStorage.getItem(STORAGE_KEY_EMAIL);
+  const savedPassword = localStorage.getItem(STORAGE_KEY_PASSWORD);
+  
+  if (savedEmail && savedPassword) {
+    form.email = savedEmail;
+    form.password = savedPassword;
+    rememberMe.value = true;
+  }
+});
 
 const handleSubmit = async () => {
   errors.email = '';
@@ -70,6 +102,16 @@ const handleSubmit = async () => {
   try {
     const response = await authStore.parentLogin(form);
     console.log('Login response:', response);
+    
+    // パスワード保存の処理
+    if (rememberMe.value) {
+      localStorage.setItem(STORAGE_KEY_EMAIL, form.email);
+      localStorage.setItem(STORAGE_KEY_PASSWORD, form.password);
+    } else {
+      // チェックを外した場合は削除
+      localStorage.removeItem(STORAGE_KEY_EMAIL);
+      localStorage.removeItem(STORAGE_KEY_PASSWORD);
+    }
     
     // 直接ダッシュボードへ
     router.push({ name: 'parent.dashboard' });
