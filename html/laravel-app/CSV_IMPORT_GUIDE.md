@@ -21,11 +21,8 @@
 - **必須項目**:
   - `seito_id`: 生徒ID（紐付ける生徒のID）
   - `parent_name`: 保護者名（例: 山田一郎）
-  - `parent_email`: メールアドレス（ログイン用）
-  - `parent_relationship`: 続柄（例: 父、母）
-- **任意項目**:
-  - `parent_tel`: 電話番号
-  - `initial_password`: 初期パスワード（未指定の場合は"password123"）
+  - `parent_initial_email`: 初期メールアドレス（ログイン用）
+  - `parent_initial_password`: 初期パスワード
 
 ### 3. 管理者データインポート
 - **必須項目**:
@@ -46,9 +43,10 @@ seito_id,seito_name,seito_number,class_id,seito_initial_email
 
 ### parents.csv
 ```csv
-seito_id,parent_name,parent_email,parent_tel,parent_relationship,initial_password
-1001,山田一郎,yamada@example.com,090-1234-5678,父,password123
-1002,佐藤美咲,sato@example.com,080-9876-5432,母,password456
+seito_id,parent_name,parent_initial_email,parent_initial_password
+1001,山田一郎,yamada@example.com,password123
+1002,佐藤美咲,sato@example.com,password456
+2001,鈴木花子,suzuki@example.com,pass2001
 ```
 
 ### admins.csv
@@ -83,7 +81,7 @@ name,email,password
 - CSV形式（.csv拡張子）のみ対応
 - 既存データと重複する場合は上書きされます
   - 生徒: seito_id で判定
-  - 保護者: parent_email で判定
+  - 保護者: parent_initial_email で判定
   - 管理者: email（未指定の場合はname）で判定
 - 保護者データをインポートする前に、対応する生徒データが存在している必要があります
 - 生徒データをインポートする前に、対応するクラスデータが存在している必要があります

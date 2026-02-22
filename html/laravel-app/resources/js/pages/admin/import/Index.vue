@@ -75,10 +75,8 @@
           <ul class="text-xs text-gray-500 list-disc list-inside mb-3">
             <li>seito_id (生徒ID)</li>
             <li>parent_name (保護者名)</li>
-            <li>parent_email (メールアドレス)</li>
-            <li>parent_tel (電話番号)</li>
-            <li>parent_relationship (続柄)</li>
-            <li>initial_password (初期パスワード)</li>
+            <li>parent_initial_email (初期メールアドレス)</li>
+            <li>parent_initial_password (初期パスワード)</li>
           </ul>
           <Button
             variant="secondary"
@@ -127,6 +125,35 @@
           <p v-if="results.parents.errors && results.parents.errors.length > 0" class="text-red-600">
             ✗ {{ results.parents.errors.length }}件 エラー
           </p>
+          
+          <!-- 認証情報表示 -->
+          <div v-if="results.parents.credentials && results.parents.credentials.length > 0" 
+               class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+            <p class="font-semibold text-yellow-800 mb-2">🔐 登録された認証情報</p>
+            <p class="text-xs text-yellow-700 mb-3">※ この情報は保護者へ伝達してください</p>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-xs">
+                <thead class="bg-yellow-100">
+                  <tr>
+                    <th class="px-2 py-1 text-left">生徒ID</th>
+                    <th class="px-2 py-1 text-left">生徒名</th>
+                    <th class="px-2 py-1 text-left">保護者名</th>
+                    <th class="px-2 py-1 text-left">メールアドレス</th>
+                    <th class="px-2 py-1 text-left">パスワード</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(cred, idx) in results.parents.credentials" :key="idx" class="border-t border-yellow-200">
+                    <td class="px-2 py-1">{{ cred.seito_id }}</td>
+                    <td class="px-2 py-1">{{ cred.seito_name }}</td>
+                    <td class="px-2 py-1">{{ cred.parent_name }}</td>
+                    <td class="px-2 py-1">{{ cred.email }}</td>
+                    <td class="px-2 py-1 font-mono">{{ cred.password }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       

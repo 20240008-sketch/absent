@@ -124,8 +124,8 @@ class CsvImportController extends Controller
             ],
             'parents' => [
                 'filename' => 'parents_template.csv',
-                'headers' => ['seito_id', 'parent_name', 'parent_email', 'parent_tel', 'parent_relationship', 'initial_password'],
-                'sample' => ['1001', '山田一郎', 'yamada@example.com', '090-1234-5678', '父', 'password123'],
+                'headers' => ['seito_id', 'parent_name', 'parent_initial_email', 'parent_initial_password'],
+                'sample' => ['1001', '山田一郎', 'yamada@example.com', 'password123'],
             ],
             'admins' => [
                 'filename' => 'admins_template.csv',

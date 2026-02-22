@@ -256,6 +256,7 @@ class CsvImportService
     {
         $errors = [];
         $success = 0;
+        $credentials = [];
         
         DB::beginTransaction();
         
@@ -264,9 +265,8 @@ class CsvImportService
                 $validator = Validator::make($row, [
                     'seito_id' => 'required|string',
                     'parent_name' => 'required|string|max:255',
-                    'parent_email' => 'required|email|max:255',
-                    'parent_tel' => 'nullable|string|max:20',
-                    'parent_relationship' => 'required|string|max:50',
+                    'parent_initial_email' => 'required|email|max:255',
+                    'parent_initial_password' => 'required|string',
                 ]);
                 
                 if ($validator->fails()) {
@@ -290,21 +290,30 @@ class CsvImportService
                     continue;
                 }
                 
-                // 初期パスワード生成（seito_id + 誕生日下4桁、またはデフォルト）
-                $initialPassword = $row['initial_password'] ?? 'password123';
+                // 初期パスワードを使用
+                $initialPassword = $row['parent_initial_password'];
                 
                 // 既存チェック（更新または新規作成）
-                ParentModel::updateOrCreate(
-                    ['parent_email' => $row['parent_email']],
+                $parent = ParentModel::updateOrCreate(
+                    ['parent_email' => $row['parent_initial_email']],
                     [
                         'seito_id' => $row['seito_id'],
                         'parent_name' => $row['parent_name'],
-                        'parent_tel' => $row['parent_tel'] ?? null,
-                        'parent_relationship' => $row['parent_relationship'],
+                        'parent_tel' => null,
+                        'parent_relationship' => '保護者',
                         'parent_password' => Hash::make($initialPassword),
                         'parent_initial_password' => $initialPassword,
                     ]
                 );
+                
+                // 認証情報を記録
+                $credentials[] = [
+                    'seito_id' => $row['seito_id'],
+                    'seito_name' => $student->seito_name,
+                    'parent_name' => $row['parent_name'],
+                    'email' => $row['parent_initial_email'],
+                    'password' => $initialPassword,
+                ];
                 
                 $success++;
             }
@@ -320,6 +329,7 @@ class CsvImportService
             'success' => $success,
             'errors' => $errors,
             'total' => count($data),
+            'credentials' => $credentials,
         ];
     }
 
