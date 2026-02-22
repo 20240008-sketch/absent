@@ -20,7 +20,7 @@ class ParentLoginController extends Controller
     }
 
     /**
-     * 保護者ログイン（2FA不要）
+     * 保護者ログイン（2FA必須）
      */
     public function login(Request $request)
     {
@@ -48,18 +48,23 @@ class ParentLoginController extends Controller
             ]);
         }
 
-        // 直接ログイン
-        Auth::guard('parent')->login($parent);
-        $request->session()->regenerate();
+        // 2段階認証コードを送信
+        $sent = $this->twoFactorService->createAndSend(
+            $parent->parent_email,
+            'parent',
+            $parent->parent_name
+        );
+
+        if (!$sent) {
+            throw ValidationException::withMessages([
+                'email' => ['認証コードの送信に失敗しました。しばらくしてから再度お試しください。'],
+            ]);
+        }
 
         return response()->json([
-            'message' => 'ログインしました。',
-            'parent' => [
-                'id' => $parent->id,
-                'name' => $parent->parent_name,
-                'email' => $parent->parent_email,
-                'seito_id' => $parent->seito_id,
-            ],
+            'message' => '認証コードをメールで送信しました。',
+            'requires_2fa' => true,
+            'email' => $parent->parent_email,
         ]);
     }
 
@@ -96,6 +101,40 @@ class ParentLoginController extends Controller
                 'email' => $parent->parent_email,
                 'seito_id' => $parent->seito_id,
             ],
+        ]);
+    }
+
+    /**
+     * 2FA認証コード再送信
+     */
+    public function resend2FA(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $parent = ParentModel::where('parent_email', $request->email)->first();
+
+        if (!$parent) {
+            throw ValidationException::withMessages([
+                'email' => ['メールアドレスが正しくありません。'],
+            ]);
+        }
+
+        $sent = $this->twoFactorService->createAndSend(
+            $parent->parent_email,
+            'parent',
+            $parent->parent_name
+        );
+
+        if (!$sent) {
+            throw ValidationException::withMessages([
+                'email' => ['認証コードの送信に失敗しました。'],
+            ]);
+        }
+
+        return response()->json([
+            'message' => '認証コードを再送信しました。',
         ]);
     }
 

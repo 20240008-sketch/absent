@@ -14,6 +14,7 @@ import ParentLogin from '../pages/auth/ParentLogin.vue';
 import Register from '../pages/auth/Register.vue';
 import RegisterParent from '../pages/auth/RegisterParent.vue';
 import TwoFactorVerify from '../pages/auth/TwoFactorVerify.vue';
+import ParentTwoFactorVerify from '../pages/auth/ParentTwoFactorVerify.vue';
 
 // 管理者画面
 import AdminDashboard from '../pages/admin/Dashboard.vue';
@@ -214,7 +215,7 @@ const routes = [
       {
         path: '',
         name: 'parent.verify2fa',
-        component: TwoFactorVerify,
+        component: ParentTwoFactorVerify,
         meta: { guest: true, guard: 'parent' }
       }
     ]

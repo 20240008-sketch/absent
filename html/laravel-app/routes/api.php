@@ -103,6 +103,7 @@ Route::prefix('parent')->middleware('web')->group(function () {
     // ログイン・認証
     Route::post('/login', [ParentLoginController::class, 'login']);
     Route::post('/verify-2fa', [ParentLoginController::class, 'verify2FA']);
+    Route::post('/resend-2fa', [ParentLoginController::class, 'resend2FA']);
     
     // 認証が必要なルート
     Route::middleware(['parent.auth', 'two_factor'])->group(function () {

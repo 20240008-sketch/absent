@@ -97,24 +97,36 @@ const handleSubmit = async () => {
   errors.general = '';
   loading.value = true;
   
-  console.log('Login attempt with:', { email: form.email });
+  console.log('🔐 保護者ログイン開始:', { email: form.email });
   
   try {
     const response = await authStore.parentLogin(form);
-    console.log('Login response:', response);
+    console.log('📩 ログインレスポンス:', response);
+    console.log('🔑 2FA必要?:', response.requires_2fa);
     
-    // パスワード保存の処理
-    if (rememberMe.value) {
-      localStorage.setItem(STORAGE_KEY_EMAIL, form.email);
-      localStorage.setItem(STORAGE_KEY_PASSWORD, form.password);
+    // 2段階認証が必要な場合
+    if (response.requires_2fa) {
+      console.log('✅ 2FA画面へ遷移します');
+      
+      // パスワード保存の処理
+      if (rememberMe.value) {
+        localStorage.setItem(STORAGE_KEY_EMAIL, form.email);
+        localStorage.setItem(STORAGE_KEY_PASSWORD, form.password);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_EMAIL);
+        localStorage.removeItem(STORAGE_KEY_PASSWORD);
+      }
+      
+      // 2段階認証画面へ遷移
+      router.push({
+        name: 'parent.verify2fa',
+        query: { email: response.email }
+      });
     } else {
-      // チェックを外した場合は削除
-      localStorage.removeItem(STORAGE_KEY_EMAIL);
-      localStorage.removeItem(STORAGE_KEY_PASSWORD);
+      // 直接ログイン成功（後方互換性）
+      console.log('⚠️ 2FAスキップ - ダッシュボードへ');
+      router.push({ name: 'parent.dashboard' });
     }
-    
-    // 直接ダッシュボードへ
-    router.push({ name: 'parent.dashboard' });
   } catch (error) {
     console.error('Login error:', error);
     console.error('Error response:', error.response?.data);

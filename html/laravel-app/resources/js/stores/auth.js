@@ -33,12 +33,25 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // 保護者ログイン（2FA不要）
+    // 保護者ログイン（2FA必須）
     async parentLogin(credentials) {
       try {
+        console.log('📡 API呼び出し: /api/parent/login');
         const response = await axios.post('/api/parent/login', credentials);
+        console.log('📨 APIレスポンス:', response.data);
         
-        // 直接ログイン成功
+        // 2FAが必要な場合
+        if (response.data.requires_2fa) {
+          console.log('🔐 2FA必須 - ストア状態を更新');
+          this.needs2FA = true;
+          this.email = response.data.email;
+          this.guard = 'parent';
+          this.loginType = 'parent';
+          return response.data;
+        }
+        
+        // 直接ログイン成功（後方互換性のため残す）
+        console.log('⚠️ 2FAスキップ - 直接ログイン');
         this.user = response.data.parent;
         this.isAuthenticated = true;
         this.guard = 'parent';
@@ -157,6 +170,15 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         throw error;
       }
+    },
+
+    // ユーザー情報を直接セット（2FA認証後など）
+    setUser(user, guard) {
+      this.user = user;
+      this.guard = guard;
+      this.isAuthenticated = true;
+      this.needs2FA = false;
+      this.needsPasswordChange = user.needs_password_change || false;
     },
 
     // お試しモード（管理者として直接ログイン）

@@ -6,12 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAbsenceRequest;
 use App\Http\Requests\UpdateAbsenceRequest;
 use App\Models\Absence;
+use App\Services\AbsenceNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class AbsenceController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(AbsenceNotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * 欠席連絡一覧取得（自分の子供のもののみ）
      */
@@ -71,8 +78,20 @@ class AbsenceController extends Controller
 
         $absence = Absence::create($request->validated());
 
+        // 担任に自動メール送信
+        try {
+            $this->notificationService->notifyTeacher($absence);
+            Log::info('欠席連絡の担任通知完了', ['absence_id' => $absence->id]);
+        } catch (\Exception $e) {
+            Log::error('欠席連絡の担任通知失敗', [
+                'absence_id' => $absence->id,
+                'error' => $e->getMessage()
+            ]);
+            // メール送信失敗してもエラーにしない（欠席登録は成功）
+        }
+
         return response()->json([
-            'message' => '欠席連絡を登録しました。',
+            'message' => '欠席連絡を登録しました。担任の先生にメールで通知しました。',
             'absence' => $absence->load('student'),
         ], 201);
     }
